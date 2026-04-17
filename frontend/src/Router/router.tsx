@@ -9,7 +9,7 @@ function Router(){
         <BrowserRouter>
           <Routes>
             <Route path="/" element = {<Home/>}/>
-            <Route path="/cadastro" element = {<Form/>}/>
+            <Route path="/login" element = {<Form/>}/>
           </Routes>
         </BrowserRouter>
     )
