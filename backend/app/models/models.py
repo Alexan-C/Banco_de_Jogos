@@ -11,7 +11,7 @@ class Usuario(Base):
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     nome = Column("nome",String)
-    email = Column("email", String, nullable=False)
+    email = Column("email", String, nullable=False, unique=True)
     senha = Column("senha", String)
     admin = Column("admin",Boolean, default=False)
     ativo = Column("ativo", Boolean, default=True)

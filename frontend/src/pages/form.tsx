@@ -1,69 +1,138 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import "./form.css"
-import { Mail, Eye, EyeOff } from 'lucide-react';
-import api from '../services/api.ts';
+import { Mail, Eye, EyeOff, User } from 'lucide-react';
+import api from '../services/api';
+import axios from 'axios';
 
 
 
 export function Login(){
+    const [confirmarSenha, setConfirmarSenha] = useState('')
+    const [nome,  setNome ] = useState('');
     const [email, setEmail] = useState('');
     const[senha, setSenha] = useState ('');
-    const [mostrarSenha, setMostrarSenha] = useState(false)
+    const [modoLogin, setmodoLogin] = useState(true);
+    const [mostrarSenha, setMostrarSenha] = useState<boolean>(false);
     
-    const handleLogin = async(e: React.FormEvent) =>{
+    const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
-        if (!email || !senha){
+        const emailverificação =  /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        if(!emailverificação.test(email)){
+            alert("Por favor, insira um e-mail válido (exemplo: nome@dominio.com)")
+            return
+        }
+        if (!email || !senha || (!modoLogin && !nome)){
             alert("Preencha todos os campos");
             return
         }
+        if (!modoLogin && senha !== confirmarSenha){
+            alert("As senhas não coincidem")
+            return
+        }
+
         try {
-                const response = await api.post('/auth/login', {email, senha})
-                alert("Sucesso!")
-                localStorage.setItem('token', response.data.access_token)
-                } catch (error){
-                    console.error("Erro no login", error)
-                    alert("E-mail ou senha incorretos")
-                }
+            // Define a rota baseada no modo
+            const rota = modoLogin ? '/auth/login' : '/auth/criar_conta';
+            const corpo = modoLogin ? { email, senha } : { nome, email, senha};
+
+            const response = await api.post(rota, corpo);
+            
+            alert(modoLogin ? "Sucesso no Login!" : "Cadastro realizado!");
+            
+            if (modoLogin) {
+                localStorage.setItem('token', response.data.access_token);
+            } else {
+                setmodoLogin(true); // Volta para o login após cadastrar
+            }
+
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error))
+        if (error.response) {
+            // Se o status for 400 (E-mail já existe)
+            if (error.response.status === 400) {
+                alert(error.response.data.detail); 
+            } 
+            // Se for 422 (Erro de validação ou campos faltando)
+            else if (error.response.status === 422) {
+                alert("Erro de validação: Verifique os campos ou o formato do e-mail.");
+                console.log("Detalhes 422:", error.response.data.detail);
+            }
+            else {
+                alert("Erro no servidor: " + (error.response.data.detail || "Erro desconhecido"));
+            }
+        } else {
+            console.error("Erro na operação", error);
+            alert("Não foi possível conectar ao servidor.");
+        }
     }
+
+    };
+
+    useEffect(() => {
+        document.title = modoLogin ? "Login" : "Cadastro";
+    },[modoLogin]);
     
-    
-    
-    return(
-        <>
-            <title>Login</title>
-            <div>
-                <form onSubmit={handleLogin}>
-                    <fieldset>
-                        <legend>
-                            <div className='container'>
-                                <div className='quadrado-branco'>
+     return(
+                    <div className='container'>
+                        <div className='quadrado-branco'>
+                                    <h2>{modoLogin ? "Login" : "Criar Conta"}</h2>
+                       <form onSubmit={handleSubmit}>
+                        {!modoLogin && (
+                        <div className='input-group'>
+                            <label>Nome</label>
+                            <div className='iconeEmailDiv'>
+                                <User className='iconeEmail' size={20}/>
+                                <input
+                                    type="text"
+                                    placeholder='Seu nome'
+                                    onChange={(e) => setNome(e.target.value)}
+                                    value={nome}/>
+                            </div>
+                        </div>
+                    )}
+                    <div className='input-group'>
                                     <label>Email</label>
                                     <div className='iconeEmailDiv'>  
                                         <Mail className='iconeEmail' size={20}/>
-                                        <input type="text" id='email' placeholder='Digite seu e-mail' 
+                                        <input type="text" id='email' placeholder='Digite seu e-mail'
                                         onChange={(e) => setEmail(e.target.value)} value={email}/>
-                                        </div>
-                                    <div>
+                                    </div>
+                                    </div>
+
+                                    <div className='input-group'>
                                         <label>Senha</label>
                                         <div className='mostrarSenhaDiv'>
-
                                         <input type={mostrarSenha ? "text" : "password"} id='senha' placeholder= 'Digite sua senha' onChange={(e) => setSenha(e.target.value)} value={senha}/>
+
                                         <button type='button' className='mostrarSenha'
                                         onClick={() => setMostrarSenha(!mostrarSenha)}
                                         >
-                                            {mostrarSenha ? <EyeOff size={20}/>: <Eye size={20}/>}
+                                        {mostrarSenha ? <EyeOff size={20}/>: <Eye size={20}/>}
                                         </button>
                                         </div>
                                     </div>
-                                    <button type='submit'>Entrar</button>
-                                </div>
-                            </div>
-                        </legend>
-                    </fieldset>
-                </form>
+                                    {!modoLogin && (
+                                        <div className='input-group'>
+                                            <label>Confirme sua Senha</label>
+                                            <div className='mostrarSenhaDiv'>
+                                                <input type={ mostrarSenha ? "text" : "password"} placeholder='Repita sua senha' onChange={(e) => setConfirmarSenha(e.target.value)}value={confirmarSenha}/>
+
+                                            </div>
+                                        </div>
+                                    ) }
+
+                                    <button type='submit'>{modoLogin ? "Entrar": "Cadastrar"}</button>
+
+                            <p className='CadastrarDiv'>
+                                <span className='Cadastrarspan' onClick={() => setmodoLogin(!modoLogin)}>
+                                    {modoLogin ? "Não tem conta? ": "Já possui uma conta?"}
+                                </span>
+                                </p>
+
+                            </form>
+                    </div>
             </div>
-            </>
-        );
-    
-}      
-    export default Login
+   );
+}    
+
+export default Login

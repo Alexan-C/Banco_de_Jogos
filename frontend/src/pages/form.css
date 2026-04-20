@@ -31,8 +31,15 @@ input:focus, button:focus {
     width: 100%;
     max-width: 400px;
     z-index: 10;
-}
 
+}
+.quadrado-branco h2{
+    text-align: center;
+    width: 100%;
+    margin-bottom: 25px;
+    font-size: 31px;
+    color: #000;
+}
 label {
     display: block;
     margin-bottom: 8px;
@@ -132,9 +139,39 @@ button[type="button"].btn-conectar,
     font-weight: bold;
     font-size: 16px;
     margin-top: 10px;
+    display: block;
 }
 
 input::placeholder {
     color: #5a3a7a;
     opacity: 0.6;
+}
+
+.cadastrarDiv {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+
+}
+
+.botaocadastrar:hover{
+    text-decoration: underline;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.input-group{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.Cadastrarspan{
+    cursor: pointer;
+    font: inherit;
+    text-decoration: mediumpurple;
 }
