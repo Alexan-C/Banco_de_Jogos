@@ -1,0 +1,101 @@
+/* Container Principal */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 50px;
+  background-color: #381858;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.links-container {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #63b3ed;
+}
+
+/* Botão de Login */
+.btn-login {
+  background-color: #3182ce;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Subseção Usuário (Dropdown) */
+.usuario-container {
+  position: relative;
+}
+
+.btn-usuario {
+  background-color: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-usuario:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.setaBaixo-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #ffffff;
+  min-width: 180px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra suave */
+  padding: 8px 0;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.setaBaixo {
+  padding: 12px 20px;
+  color: #333 !important;
+  text-decoration: none !important;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.setaBaixo:hover {
+  background-color: #f7f9fc;
+  color: #3182ce !important;
+}
+
+.btn-sair {
+  color: #e53e3e !important; /* Vermelho */
+  border-top: 1px solid #edf2f7; /* Linha fina separando o Sair */
+  margin-top: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}

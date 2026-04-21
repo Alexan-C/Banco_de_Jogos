@@ -1,18 +1,20 @@
 import "./Home.css"
-// import {useState } from 'react'
-import { Link } from "react-router-dom";
+
+import {Navbar} from "../components/Navbar"
 
 
-
-function Home() {
+export function Home() {
 
     return(
-        <>
-        <div className="Título">
-        <h1>Hello World</h1>
-        <Link to= "/login">Cadastrar Cliente</Link>
+        <div className="container-home">
+            <Navbar/>
+            <main className="content-home">
+                <header className="secao-home">
+                    <h1>Bem vindo a sua Biblioteca Digital</h1>
+                    <p>Organize seus jogos, descubra novos títulos e gerencie sua coleção</p>
+                </header>
+            </main>
         </div>
-        </>
     )
 
 

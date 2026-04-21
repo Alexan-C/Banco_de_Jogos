@@ -1,11 +1,21 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+.cotainer-home {
+  min-height: 100vh;
+  background-color: #f7fafc; /* Um cinza bem clarinho para o fundo */
 }
 
-body{
-    min-height: 100vh;
-    width: 100vw;
-    background: linear-gradient(180deg, #363467 0%, rgba(30, 29, 79, 0.8) 100%);
+.content-home{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.secao-home {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.secao-home h1 {
+  font-size: 2.5rem;
+  color: #2d3748;
+  margin-bottom: 10px;
 }

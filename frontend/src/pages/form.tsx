@@ -3,16 +3,18 @@ import "./form.css"
 import { Mail, Eye, EyeOff, User } from 'lucide-react';
 import api from '../services/api';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 
-
+// useState para conversar com o banco e tipação
 export function Login(){
     const [confirmarSenha, setConfirmarSenha] = useState('')
     const [nome,  setNome ] = useState('');
     const [email, setEmail] = useState('');
     const[senha, setSenha] = useState ('');
     const [modoLogin, setmodoLogin] = useState(true);
-    const [mostrarSenha, setMostrarSenha] = useState<boolean>(false);
+    const [mostrarSenha, setMostrarSenha] = useState<boolean>(false)
+    const navigate = useNavigate();
     
     const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
@@ -36,15 +38,20 @@ export function Login(){
             const corpo = modoLogin ? { email, senha } : { nome, email, senha};
 
             const response = await api.post(rota, corpo);
-            
-            alert(modoLogin ? "Sucesso no Login!" : "Cadastro realizado!");
-            
-            if (modoLogin) {
-                localStorage.setItem('token', response.data.access_token);
-            } else {
-                setmodoLogin(true); // Volta para o login após cadastrar
-            }
 
+            // acess token salva independentemente do login ou cadastro
+            if(response.data.access_token){
+                localStorage.setItem('token', response.data.access_token);
+
+                // volta ao início
+                navigate('/')
+            } else {
+                if (!modoLogin){
+                    setmodoLogin(true);
+                    alert("Conta criada com sucesso! Faça seu login")
+                }
+            }
+            // tratamento de erros 
     } catch (error: unknown) {
         if (axios.isAxiosError(error))
         if (error.response) {
@@ -57,6 +64,7 @@ export function Login(){
                 alert("Erro de validação: Verifique os campos ou o formato do e-mail.");
                 console.log("Detalhes 422:", error.response.data.detail);
             }
+            // erros de servidor / outros
             else {
                 alert("Erro no servidor: " + (error.response.data.detail || "Erro desconhecido"));
             }
@@ -67,7 +75,7 @@ export function Login(){
     }
 
     };
-
+    // melhor forma de mudar o título da página no login
     useEffect(() => {
         document.title = modoLogin ? "Login" : "Cadastro";
     },[modoLogin]);
