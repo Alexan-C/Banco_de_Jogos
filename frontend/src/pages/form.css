@@ -175,3 +175,7 @@ form {
     font: inherit;
     text-decoration: mediumpurple;
 }
+
+.Cadastrarspan:hover{
+    color: #764ba2;
+}

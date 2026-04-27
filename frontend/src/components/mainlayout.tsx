@@ -1,11 +1,10 @@
-import { useNavigate, Link } from 'react-router-dom';
-import './Navbar.css'
-import { useState } from 'react';
+import { NavLink, Link} from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
+import './mainlayout.css'
+import React, { useState } from 'react';
+import { User } from 'lucide-react';
 
-
-export function Navbar(){
-
-    const navigate = useNavigate();
+export const MainLayout: React.FC = () =>{
 
     // !! = se tiver token está logado (True ou seja logado ) se não retornar é falso (Não logado)
     const  estaLogado = !!localStorage.getItem('token')
@@ -17,32 +16,33 @@ export function Navbar(){
     const handleSair = () => {
         localStorage.removeItem('token') // remove o token
         setMenuAberto(false)
-        navigate('/')
+        window.location.href = '/'
 
     };
 return (
+  <div className='container__principal'>
     <nav className="navbar">
-      <div className="logo">Minha Biblioteca</div>
-
-      <div className="links-container">
-        <Link to="/" className="nav-link">Início</Link>
-
+      <div className='nav-links-container'>
+        <NavLink to={"/"} className={"nav-item"}>Inicio</NavLink>
+        <NavLink to="/minha_biblioteca" 
+         className={({isActive}) => isActive ? 'nav-item ativo' : 'nav-item'}>Biblioteca
+                </NavLink>
+                </div>
         {estaLogado ? (
           <div className="usuario-container">
             <button 
               className="btn-usuario" 
               onClick={() => setMenuAberto(!menuAberto)}
             >
-              Usuário <span>{menuAberto ? '▴' : '▾'}</span>
-            </button>
+              <User className='iconeUser' size={20}/> 
+              <span>{menuAberto ? '▴' : '▾'}</span>
+              </button>
+            
 
             {menuAberto && (
               <div className="setaBaixo-menu">
                 <Link to="/perfil" className="setaBaixo-item" onClick={() => setMenuAberto(false)}>
-                  Meu Perfil
-                </Link>
-                <Link to="/biblioteca" className="setaBaixo-item" onClick={() => setMenuAberto(false)}>
-                  Ver Biblioteca
+                  Perfil
                 </Link>
                 <button onClick={handleSair} className="setaBaixo-item btn-sair">
                   Sair
@@ -53,9 +53,14 @@ return (
         ) : (
           <Link to="/login" className="nav-link btn-login">Entrar</Link>
         )}
-      </div>
     </nav>
+    <main className='container-principal2'>
+      <Outlet/>
+
+    </main>
+    
+    </div>
   );
 }
 
-export default Navbar
+export default MainLayout;

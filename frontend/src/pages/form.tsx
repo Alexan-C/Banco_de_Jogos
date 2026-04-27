@@ -3,7 +3,7 @@ import "./form.css"
 import { Mail, Eye, EyeOff, User } from 'lucide-react';
 import api from '../services/api';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+
 
 
 // useState para conversar com o banco e tipação
@@ -14,7 +14,7 @@ export function Login(){
     const[senha, setSenha] = useState ('');
     const [modoLogin, setmodoLogin] = useState(true);
     const [mostrarSenha, setMostrarSenha] = useState<boolean>(false)
-    const navigate = useNavigate();
+
     
     const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
@@ -42,9 +42,8 @@ export function Login(){
             // acess token salva independentemente do login ou cadastro
             if(response.data.access_token){
                 localStorage.setItem('token', response.data.access_token);
-
+                window.location.href = '/'
                 // volta ao início
-                navigate('/')
             } else {
                 if (!modoLogin){
                     setmodoLogin(true);
