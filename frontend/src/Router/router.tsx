@@ -2,7 +2,9 @@ import {Route, Routes, BrowserRouter, Navigate, useLocation} from "react-router-
 import Home from "../pages/Home"
 import Form  from "../pages/form.tsx"
 import MainLayout from "../components/mainlayout.tsx"
-import Biblioteca from "../pages/biblioteca.tsx"
+import Biblioteca from "../pages/Biblioteca.tsx"
+import Jogos from "../pages/Jogos.tsx"
+import Perfil from "../pages/Perfil.tsx"
 import "./router.css"
 
 // está logado //
@@ -18,7 +20,8 @@ function AnimationRoutes(){
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path="minha_biblioteca" element = {estaLogado ?  <Biblioteca /> : <Navigate to ="/login" replace />} />
-              <Route path="perfil" element={<div>Página de Perfil em breve</div>} />
+              <Route path="perfil" element= {estaLogado ? <Perfil/> : <Navigate to={'/'} replace />} />
+              <Route path="jogos" element= {estaLogado ? <Jogos/> : <Navigate to ="/login" replace />}/>
             </Route>
             <Route path="/login" element = {<Form/>}/>
           </Routes>

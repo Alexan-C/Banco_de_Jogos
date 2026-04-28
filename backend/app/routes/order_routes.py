@@ -28,7 +28,7 @@ async def adicionar_jogos(adicionar_jogo: JogoCreateSchema, session: Session = D
         if jogo_existente:
             raise HTTPException(status_code=400, detail="Este jogo já existe")
         try: 
-            novo_jogo = Jogo(adicionar_jogo.nome,adicionar_jogo.categoria,adicionar_jogo.ano,adicionar_jogo.descricao)
+            novo_jogo = Jogo(adicionar_jogo.nome,adicionar_jogo.categoria,adicionar_jogo.ano,adicionar_jogo.descricao, adicionar_jogo.capa_url)
             session.add(novo_jogo)
             session.commit()
             session.refresh(novo_jogo)

@@ -16,6 +16,7 @@ class Usuario(Base):
     admin = Column("admin",Boolean, default=False)
     ativo = Column("ativo", Boolean, default=True)
 
+
     jogos = relationship("Biblioteca", back_populates="usuario")
     
     def __init__(self,nome, email, senha, ativo= True, admin= False):
@@ -35,15 +36,16 @@ class Jogo(Base):
     categoria = Column(String, nullable=False)
     ano = Column(Integer)
     descricao = Column(String)
+    capa_url = Column(String)
 
     jogos_usuarios = relationship("Biblioteca", back_populates="jogo")
 
-    def __init__(self,nome, categoria, ano, descricao):
+    def __init__(self,nome, categoria, ano, descricao, capa_url):
             self.nome = nome
             self.categoria = categoria
             self.ano = ano
             self.descricao = descricao
-
+            self.capa_url = capa_url
 # TODOS OS JOGOS
 class Biblioteca(Base):
     __tablename__ = "biblioteca"

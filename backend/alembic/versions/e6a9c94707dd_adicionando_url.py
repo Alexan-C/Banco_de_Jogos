@@ -1,8 +1,8 @@
-"""setup final biblioteca
+"""adicionando url
 
-Revision ID: 4d73216ff55e
+Revision ID: e6a9c94707dd
 Revises: 
-Create Date: 2026-04-13 17:28:28.366441
+Create Date: 2026-04-27 21:08:49.359449
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '4d73216ff55e'
+revision: str = 'e6a9c94707dd'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,6 +27,7 @@ def upgrade() -> None:
     sa.Column('categoria', sa.String(), nullable=False),
     sa.Column('ano', sa.Integer(), nullable=True),
     sa.Column('descricao', sa.String(), nullable=True),
+    sa.Column('capa_url', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('usuarios',
@@ -36,7 +37,8 @@ def upgrade() -> None:
     sa.Column('senha', sa.String(), nullable=True),
     sa.Column('admin', sa.Boolean(), nullable=True),
     sa.Column('ativo', sa.Boolean(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email')
     )
     op.create_table('biblioteca',
     sa.Column('id', sa.Integer(), nullable=False),

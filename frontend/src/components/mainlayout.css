@@ -30,7 +30,7 @@
   padding: 10px 5px;
 }
 .nav-item.ativo{
-  border-bottom: 3px solid #743786;
+  border-bottom: 3px solid #9b33bb;
 }
 .nav-item:hover{
   color: white;

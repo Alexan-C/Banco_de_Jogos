@@ -27,6 +27,7 @@ return (
         <NavLink to="/minha_biblioteca" 
          className={({isActive}) => isActive ? 'nav-item ativo' : 'nav-item'}>Biblioteca
                 </NavLink>
+          <NavLink to={"/jogos"} className={({isActive})=> isActive ? 'nav-item ativo' : 'nav-item'}>Jogos</NavLink>
                 </div>
         {estaLogado ? (
           <div className="usuario-container">

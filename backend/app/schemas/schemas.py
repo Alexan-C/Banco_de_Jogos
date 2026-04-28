@@ -26,6 +26,7 @@ class JogoCreateSchema(BaseModel):
     categoria: str
     ano: int
     descricao: str
+    capa_url: Optional[str] = None
 
     class Config:
         from_attributes = True
