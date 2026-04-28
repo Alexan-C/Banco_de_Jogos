@@ -39,21 +39,23 @@ async def adicionar_jogos(adicionar_jogo: JogoCreateSchema, session: Session = D
                 print(f"Erro: {e}")
                 raise HTTPException(status_code=500, detail="Erro ao salvar o jogo")
         
-@order_router.post("/jogo/remover_jogo")
-async def remover_jogo(id_jogo: int, session: Session= Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):
-     if not usuario.admin:
-          raise HTTPException(status_code=403, detail="Acesso Negado")
-     jogo = session.query(Jogo).filter(Jogo.id == id_jogo).first()
-     if not jogo:
-          raise HTTPException(status_code=404, detail="Jogo não encontrado")
-     try:
-          session.delete(jogo)
-          session.commit()
-          return{"mensagem": f"Jogo '{jogo}' removido com sucesso!"}
-     except Exception as e:
-            session.rollback()
-            print(f"Erro ao deletar: {e}")
-            raise HTTPException(status_code=500, detail="Erro interno ao remover o jogo")
+@order_router.delete("/jogo/removerJogo")
+async def remover_jogo_por_nome(nome_jogo: str, session: Session = Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):
+    if not usuario.admin:
+        raise HTTPException(status_code=403, detail="Acesso Negado")
+    
+    jogo = session.query(Jogo).filter(Jogo.nome == nome_jogo).first()
+    
+    if not jogo:
+        raise HTTPException(status_code=404, detail=f"Jogo '{nome_jogo}' não encontrado")
+    
+    try:
+        session.delete(jogo)
+        session.commit()
+        return {"mensagem": f"Jogo '{nome_jogo}' removido com sucesso!"}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="Erro interno ao remover")
 
 @order_router.post("/vincular")
 async def vincular_jogo(dados: VinculoJogoSchema,session: Session = Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):

@@ -27,9 +27,7 @@ def autenticar_usuario(email, senha ,session):
 
 @auth_router.get("/")
 async def home():
-    """
-    essa é a rota padrao de pedidos do nosso sistema, todos os usuarios precisam estar autenticados.
-    """
+
     return {"msg": "Você acessou a rota padrao de autenticação", "autenticado": False}
 @auth_router.post("/criar_conta")
 
@@ -56,7 +54,8 @@ async def login(login_schema: LoginSchema, session: Session = Depends(pegar_sess
         return {
             "access_token" : access_token,
             "refresh_token": refresh_token,
-            "token_type": "Bearer"
+            "token_type": "Bearer",
+            "admin": usuario.admin
                 }
     
 @auth_router.post("/login-form")

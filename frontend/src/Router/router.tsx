@@ -6,6 +6,7 @@ import Biblioteca from "../pages/Biblioteca.tsx"
 import Jogos from "../pages/Jogos.tsx"
 import Perfil from "../pages/Perfil.tsx"
 import "./router.css"
+import Addjogos from "../admin/AddJogos.tsx"
 
 // está logado //
 
@@ -13,6 +14,7 @@ import "./router.css"
 
 function AnimationRoutes(){
   const  estaLogado = !!localStorage.getItem('token')
+  const adminSalvo = localStorage.getItem('user_admin');
   const  location = useLocation()
     return(
           <div key={location.pathname} className="animacao-suave">
@@ -22,6 +24,7 @@ function AnimationRoutes(){
               <Route path="minha_biblioteca" element = {estaLogado ?  <Biblioteca /> : <Navigate to ="/login" replace />} />
               <Route path="perfil" element= {estaLogado ? <Perfil/> : <Navigate to={'/'} replace />} />
               <Route path="jogos" element= {estaLogado ? <Jogos/> : <Navigate to ="/login" replace />}/>
+              <Route path="/admin/adicionar" element= { estaLogado && adminSalvo ? <Addjogos/> : <Navigate to ="/login" replace />}/>
             </Route>
             <Route path="/login" element = {<Form/>}/>
           </Routes>

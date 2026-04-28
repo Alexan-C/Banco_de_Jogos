@@ -1,0 +1,299 @@
+/* 1. TEXTOS GERAIS (Títulos e Labels) */
+.form-side h2, 
+.form-side label,
+.preview-side p {
+    color: #d1d1e0; 
+    filter: brightness(0.9); 
+}
+
+/* 2. INPUTS E TEXTAREA */
+.form-content input, 
+.form-content textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    /* Cor de fundo com brilho reduzido */
+    background-color: #e0e0eb; 
+    
+    /* Cor do texto que o usuário digita */
+    color: #2e2d4d; 
+    
+    font-size: 14px;
+    margin: 0;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+/* 3. PLACEHOLDER (O texto "Aguardando..." e dicas dentro dos inputs) */
+.form-content input::placeholder, 
+.form-content textarea::placeholder,
+.preview-side {
+    color: #8a89a6; 
+}
+
+/* 4. FOCO NO INPUT (Quando clicar para digitar) */
+.form-content input:focus, 
+.form-content textarea:focus {
+    outline: none;
+    background-color: #ffffff; 
+    border: 1px solid #6c63ff;
+    box-shadow: 0 0 8px rgba(108, 99, 255, 0.2);
+}
+
+/* 5. TEXTO DO BOTÃO TOGGLE */
+.btn-toggle-unico {
+
+    color: #b0aec5; 
+}
+
+
+/* 1. WRAPPER PRINCIPAL */
+.pagina-add-jogos-wrapper {
+    min-height: 90.3vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #363467 0%, rgba(30, 29, 79, 0.8) 100%);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 2. O CARD (Dashboard) com animação SlideUp */
+.dashboard-container {
+    display: flex;
+    max-width: 1100px;
+    width: 100%;
+    background: #1e1d4f;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 500px;
+    animation: slideUp 0.6s ease-out; 
+}
+
+/* 3. LADO DA CAPA (Esquerda) */
+.preview-side {
+    flex: 1;
+    position: relative;
+    background: rgba(30, 29, 79, 0.4); 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.capa-cheia {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+/* 4. LADO DO FORMULÁRIO (Direita) com gradiente e animação */
+.form-side {
+    flex: 1.2;
+    padding: 45px;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #363467 0%, rgba(30, 29, 79, 0.8) 100%);
+}
+
+/* 5. CONTEÚDO DO FORMULÁRIO com animação FadeInRight */
+.form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; 
+    animation: fadeInRight 0.4s ease-out; 
+}
+
+/* Ajuste nos inputs para eliminar espaços brancos */
+.form-content input, 
+.form-content textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff;
+    color: #333;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* 6. BOTÃO DE ALTERNAR (Toggle) */
+.btn-toggle-unico {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-bottom: 25px;
+    background: rgba(0, 0, 0, 0.2); 
+    color: #b0aec5;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-toggle-unico:active {
+    transform: scale(0.95);
+}
+
+.btn-toggle-unico.modo-remover {
+    background: #5e2424; 
+    color: #e2b6b6;
+    animation: shake 0.3s ease-in-out; 
+}
+
+/* 7. BOTÃO CONFIRMAR (Roxo mais claro) */
+.btn-confirmar {
+    background: #6c63ff; 
+    color: white;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+.btn-confirmar:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.btn-confirmar:active {
+    transform: translateY(2px);
+}
+
+.btn-confirmar.btn-danger {
+    background: #822a2a;
+}
+
+/* 8. SEUS KEYFRAMES ORIGINAIS */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Selecionando os campos de entrada */
+.form-content input, 
+.form-content textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    
+    /* COR DO FUNDO: Cinza azulado suave para combinar com o tema */
+    background-color: #d1d1e0; 
+    
+    /* COR DO TEXTO DIGITADO: Um pouco mais escura para dar leitura */
+    color: #2e2d4d; 
+    
+   
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+/* Ajustando a cor do Placeholder (o texto de exemplo dentro) */
+.form-content input::placeholder, 
+.form-content textarea::placeholder {
+    color: #6a6986; 
+}
+
+/* Efeito ao clicar: o fundo pode clarear levemente */
+.form-content input:focus, 
+.form-content textarea:focus {
+    background-color: #e6e6f2; 
+    border: 1px solid #6c63ff;
+}
+
+
+.overlay-nome {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 20px 10px;
+    text-align: center;
+    z-index: 2;
+}
+
+.overlay-nome h3 {
+    color: #d1d1e0;
+    margin: 0;
+    font-size: 1.4rem;
+}
+/* Hierarquia do Cabeçalho */
+.cabecalho-form {
+    margin-bottom: 20px;
+}
+
+.badge-admin {
+    display: inline-block;
+    background: rgba(108, 99, 255, 0.15);
+    color: #8c85ff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.cabecalho-form h2 { margin: 0; color: #ffffff; font-size: 1.8rem; }
+.subtitulo-form { color: #8a89a6; font-size: 0.9rem; margin-top: 5px; }
+
+/* Inputs mais Vivos */
+.form-content input, 
+.form-content textarea,
+.form-content select {
+    width: 100%;
+    padding: 16px; /* Aumentei levemente para ficar mais robusto */
+    border-radius: 10px;
+    border: 2px solid transparent; /* Preparando para o hover/focus */
+    background-color: #d1d1e0;
+    color: #2e2d4d;
+    font-size: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-content select {
+    appearance: none; /* Remove a setinha feia padrão do navegador */
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 18px;
+    cursor: pointer;
+}
+
+/* Foco Forte (Glowing Effect) */
+.form-content input:focus, 
+.form-content textarea:focus,
+.form-content select:focus {
+    background-color: #ffffff;
+    border: 2px solid #6c63ff;
+    box-shadow: 0 0 15px rgba(108, 99, 255, 0.3); 
+    transform: translateY(-2px); 
+    outline: none;
+}

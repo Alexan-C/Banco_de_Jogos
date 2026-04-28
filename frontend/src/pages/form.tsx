@@ -42,6 +42,8 @@ export function Login(){
             // acess token salva independentemente do login ou cadastro
             if(response.data.access_token){
                 localStorage.setItem('token', response.data.access_token);
+                // verifica se é admin
+                localStorage.setItem('user_admin', String(response.data.admin));
                 window.location.href = '/'
                 // volta ao início
             } else {
