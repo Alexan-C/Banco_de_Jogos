@@ -10,33 +10,30 @@ import Addjogos from "../admin/AddJogos.tsx"
 
 // está logado //
 
-
-
-function AnimationRoutes(){
-  const  estaLogado = !!localStorage.getItem('token')
+function AnimationRoutes() {
+  const estaLogado = !!localStorage.getItem('token');
   const adminSalvo = localStorage.getItem('user_admin');
-  const  location = useLocation()
-    return(
-          <div key={location.pathname} className="animacao-suave">
-          <Routes location={location}>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Home />} />
-              <Route path="minha_biblioteca" element = {estaLogado ?  <Biblioteca /> : <Navigate to ="/login" replace />} />
-              <Route path="perfil" element= {estaLogado ? <Perfil/> : <Navigate to={'/'} replace />} />
-              <Route path="jogos" element= {estaLogado ? <Jogos/> : <Navigate to ="/login" replace />}/>
-              <Route path="/admin/adicionar" element= { estaLogado && adminSalvo ? <Addjogos/> : <Navigate to ="/login" replace />}/>
-            </Route>
-            <Route path="/login" element = {<Form/>}/>
-          </Routes>
-          </div>
-    )
-}
-function Router(){
-  return(
-    <BrowserRouter>
-    <AnimationRoutes/>
-    </BrowserRouter>
-  )
+  const location = useLocation();
+
+  return (
+    <Routes location={location}>
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Home />} />
+        <Route path="minha_biblioteca" element={estaLogado ? <Biblioteca /> : <Navigate to="/login" replace />} />
+        <Route path="perfil" element={estaLogado ? <Perfil /> : <Navigate to="/" replace />} />
+        <Route path="jogos" element={estaLogado ? <Jogos /> : <Navigate to="/login" replace />} />
+        <Route path="admin/adicionar" element={estaLogado && adminSalvo ? <Addjogos /> : <Navigate to="/login" replace />} />
+      </Route>
+      <Route path="/login" element={<Form />} />
+    </Routes>
+  );
 }
 
-export default Router
+export default function Router() {
+  return (
+    <BrowserRouter>
+      <AnimationRoutes />
+    </BrowserRouter>
+  );
+}
+

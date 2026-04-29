@@ -55,7 +55,8 @@ async def login(login_schema: LoginSchema, session: Session = Depends(pegar_sess
             "access_token" : access_token,
             "refresh_token": refresh_token,
             "token_type": "Bearer",
-            "admin": usuario.admin
+            "admin": usuario.admin,
+            "nome": usuario.nome
                 }
     
 @auth_router.post("/login-form")

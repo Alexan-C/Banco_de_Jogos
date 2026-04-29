@@ -14,10 +14,9 @@
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     
-    /* Cor de fundo com brilho reduzido */
+
     background-color: #e0e0eb; 
     
-    /* Cor do texto que o usuário digita */
     color: #2e2d4d; 
     
     font-size: 14px;
@@ -51,7 +50,7 @@
 
 /* 1. WRAPPER PRINCIPAL */
 .pagina-add-jogos-wrapper {
-    min-height: 90.3vh;
+    min-height: 91.2vh;
     width: 100%;
     display: flex;
     align-items: center;

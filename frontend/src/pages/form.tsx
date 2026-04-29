@@ -3,6 +3,7 @@ import "./form.css"
 import { Mail, Eye, EyeOff, User } from 'lucide-react';
 import api from '../services/api';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 
@@ -35,7 +36,7 @@ export function Login(){
         try {
             // Define a rota baseada no modo
             const rota = modoLogin ? '/auth/login' : '/auth/criar_conta';
-            const corpo = modoLogin ? { email, senha } : { nome, email, senha};
+            const corpo = modoLogin ? { nome, email, senha} : { nome, email, senha};
 
             const response = await api.post(rota, corpo);
 
@@ -44,6 +45,7 @@ export function Login(){
                 localStorage.setItem('token', response.data.access_token);
                 // verifica se é admin
                 localStorage.setItem('user_admin', String(response.data.admin));
+                localStorage.setItem('nome', String(response.data.nome))
                 window.location.href = '/'
                 // volta ao início
             } else {
@@ -76,7 +78,6 @@ export function Login(){
     }
 
     };
-    // melhor forma de mudar o título da página no login
     useEffect(() => {
         document.title = modoLogin ? "Login" : "Cadastro";
     },[modoLogin]);
@@ -84,6 +85,12 @@ export function Login(){
      return(
                     <div className='container'>
                         <div className='quadrado-branco'>
+                            <AnimatePresence mode='wait'>
+                                <motion.div key={modoLogin ? "login" : "cadastro"} 
+                        initial={{ opacity: 0, x: 20 }}      
+                        animate={{ opacity: 1, x: 0 }}       
+                        exit={{ opacity: 0, x: -20 }}         
+                        transition={{ duration: 0.3 }}>
                                     <h2>{modoLogin ? "Login" : "Criar Conta"}</h2>
                        <form onSubmit={handleSubmit}>
                         {!modoLogin && (
@@ -139,6 +146,8 @@ export function Login(){
                                 </p>
 
                             </form>
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
             </div>
    );
