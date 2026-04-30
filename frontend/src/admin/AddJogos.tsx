@@ -50,7 +50,7 @@ return (
     style={jogo.capa_url ? { backgroundImage: `url(${jogo.capa_url})` } : {}}
 >
     {/* Essa div cria o desfoque escuro por cima do background */}
-    <div className="preview-blur-overlay"></div>
+
 
     {jogo.capa_url ? (
         <>

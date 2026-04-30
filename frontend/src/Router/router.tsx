@@ -4,7 +4,6 @@ import Form  from "../pages/form.tsx"
 import MainLayout from "../components/mainlayout.tsx"
 import Biblioteca from "../pages/Biblioteca.tsx"
 import Jogos from "../pages/Jogos.tsx"
-import Perfil from "../pages/Perfil.tsx"
 import "./router.css"
 import Addjogos from "../admin/AddJogos.tsx"
 
@@ -20,7 +19,6 @@ function AnimationRoutes() {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="minha_biblioteca" element={estaLogado ? <Biblioteca /> : <Navigate to="/login" replace />} />
-        <Route path="perfil" element={estaLogado ? <Perfil /> : <Navigate to="/" replace />} />
         <Route path="jogos" element={estaLogado ? <Jogos /> : <Navigate to="/login" replace />} />
         <Route path="admin/adicionar" element={estaLogado && adminSalvo ? <Addjogos /> : <Navigate to="/login" replace />} />
       </Route>

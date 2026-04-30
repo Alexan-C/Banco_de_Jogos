@@ -59,15 +59,21 @@ async def remover_jogo_por_nome(nome_jogo: str, session: Session = Depends(pegar
 
 @order_router.post("/vincular")
 async def vincular_jogo(dados: VinculoJogoSchema,session: Session = Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):
-
+    jogo_existe = session.query(Jogo).filter(Jogo.id == dados.jogo_id).first()
+    
+    if not jogo_existe:
+         raise HTTPException(status_code= 404, detail=f"O jogo {dados.jogo_id} não existe ou foi removido")
     if dados.plataforma == "PC" and dados.subcategoria not in ["Steam", "Epic"]:
         raise HTTPException(
             status_code=400, 
             detail="Para PC, selecione obrigatoriamente Steam ou Epic."
         )
+  
     sub_final = dados.subcategoria if dados.plataforma == "PC" else None
    
     vinculo_existente = session.query(Biblioteca).filter(Biblioteca.usuario_id == usuario.id,Biblioteca.jogo_id == dados.jogo_id,Biblioteca.plataforma == dados.plataforma,Biblioteca.subcategoria == sub_final).first()
+
+    
     
     if vinculo_existente:
         local = f"{dados.plataforma}"
@@ -92,6 +98,7 @@ async def vincular_jogo(dados: VinculoJogoSchema,session: Session = Depends(pega
 
 @order_router.get("/minha_biblioteca")
 async def listar_minha_biblioteca(session: Session = Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):
+     
      resultados = session.query(Biblioteca).filter(Biblioteca.usuario_id == usuario.id).all()
 
      if not resultados:
@@ -102,11 +109,15 @@ async def listar_minha_biblioteca(session: Session = Depends(pegar_sessao), usua
           jogo_id = item.jogo.id
     
      if jogo_id not in biblioteca_dict:
-              biblioteca_dict[jogo_id] = {
-                "nome": item.jogo.nome,
-                "categoria": item.jogo.categoria,
-                "detalhes_plataformas": []
-                }
+            biblioteca_dict[jogo_id] = {
+                    "id": item.jogo.id,
+                    "nome": item.jogo.nome,
+                    "categoria": item.jogo.categoria,
+                    "ano": item.jogo.ano,
+                    "descricao": item.jogo.descricao,
+                    "capa_url": item.jogo.capa_url,
+                    "detalhes_plataformas": []
+               }
      biblioteca_dict[jogo_id]["detalhes_plataformas"].append({
           "plataforma": item.plataforma,
           "subcategora": item.subcategoria

@@ -1,8 +1,8 @@
-"""adicionando url
+"""Correção
 
-Revision ID: e6a9c94707dd
+Revision ID: 39c6b8a00490
 Revises: 
-Create Date: 2026-04-27 21:08:49.359449
+Create Date: 2026-04-30 17:15:43.436329
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e6a9c94707dd'
+revision: str = '39c6b8a00490'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

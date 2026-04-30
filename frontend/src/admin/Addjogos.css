@@ -83,13 +83,19 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat:  no-repeat;
+
 }
 
 .capa-cheia {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    filter: none !important;
+    opacity: 1 !important;
+
 }
 
 /* 4. LADO DO FORMULÁRIO (Direita) com gradiente e animação */
