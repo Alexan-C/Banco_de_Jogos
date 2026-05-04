@@ -14,7 +14,7 @@
 
 .card-jogo:hover {
     transform: translateY(-8px);
-    border-color: #592c8d; /* Brilha na cor do seu fundo ao passar o mouse */
+    border-color: #592c8d; 
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
 }
 
@@ -45,7 +45,7 @@
 /* Imagem (Fixando a altura para o card não esticar) */
 .capa-container {
     width: 100%;
-    height: 300px; /* Altura ideal para capas */
+    height: 300px;
     overflow: hidden;
 }
 
@@ -59,17 +59,16 @@
 /* Rodapé com Descrição */
 .info-jogo {
     padding: 20px 20px;
-    background-color: #1a1a1a; /* Garante que o fundo continue escuro */
+    background-color: #1a1a1a; 
     flex-grow: 1;
 }
 
 .descricao-jogo {
-    color: #f1c40f; /* O seu amarelo */
+    color: #f1c40f; 
     font-size: 0.8rem;
     line-height: 1.4;
     margin: 0;
     font-style: italic;
-    /* Limita a 3 linhas para o card manter o tamanho padrão */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -86,15 +85,13 @@
 
 .biblioteca-container {
     padding: 40px;
-    background-color: #1a1938; /* Cor do seu tema */
+    background-color: #1a1938; 
     min-height: 100vh;
 }
 
 .jogos-grid {
     display: grid;
-    /* Define 4 colunas com o mesmo tamanho (1fr) */
     grid-template-columns: repeat(4, 1fr); 
-    /* Espaço entre os cards */
     gap: 30px; 
     width: 100%;
     max-width: 1400px;

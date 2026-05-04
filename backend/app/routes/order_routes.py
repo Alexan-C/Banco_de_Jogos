@@ -7,7 +7,7 @@ from app.models.models import Jogo, Biblioteca
 from typing import Optional
 
 
-order_router = APIRouter(prefix="/pedidos", tags=["pedidos"], dependencies=[Depends(verificar_token)])
+order_router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 
 @order_router.get("/list") 
 async def listar_todos_os_jogos(session: Session = Depends(pegar_sessao)):

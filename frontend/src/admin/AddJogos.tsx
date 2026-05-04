@@ -97,6 +97,9 @@ return (
             <option value="Ação / Aventura">Ação / Aventura</option>
             <option value="Mundo Aberto">Mundo Aberto</option>
             <option value="FPS">FPS</option>
+            <option value="Metrovania">Metrovania</option>
+            <option value="Tower Defense">Tower Defense</option>
+            <option value="Survival">Survival</option>
         </select>
     </div>
 

@@ -1,8 +1,14 @@
 import { useNavigate, useLocation, Outlet} from 'react-router-dom';
 import './mainlayout.css'
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronDown, Gamepad2, User, LogOut, Crown, LogIn} from 'lucide-react';
-// import { nav } from 'framer-motion/client';
+
+const rotas: Record<string, string> = {
+    'Início': '/',
+    'Biblioteca': '/minha_biblioteca',
+    'Jogos': '/jogos',
+    'Gerenciar': '/admin/adicionar'
+};
 
 export const MainLayout: React.FC = () =>{
   
@@ -28,12 +34,18 @@ const handleSair = () => {
 }
 const tabs = ['Início', 'Biblioteca', 'Jogos', 'Gerenciar'];
 
-const rotas: Record<string, string> = {
-  'Início': '/',
-  'Biblioteca': '/minha_biblioteca',
-  'Jogos': '/jogos',
-  'Gerenciar': '/admin/adicionar'
-};
+
+    
+useEffect(() => {
+    const rotaAtual = location.pathname;
+    const tabCorrespondente = Object.keys(rotas).find(key => rotas[key] === rotaAtual);
+    
+    if (tabCorrespondente) {
+        requestAnimationFrame(() => {
+            setActiveTab(tabCorrespondente);
+        });
+    }
+}, [location.pathname]);
 
 return (
         <div className="layout-wrapper">

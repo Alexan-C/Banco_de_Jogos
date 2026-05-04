@@ -78,9 +78,12 @@
     background: linear-gradient(90deg, #7B61FF, #9B6BFF );
     box-shadow: 0 0 8px #7B61FF;
     border-radius: 2px;
-    transition: all 0.3s ease;
+    transition: EntradaBarra 0.3s ease-out;
 }
-
+@keyframes entradaBarra {
+    from{transform: scaleX(0); opacity: 0;}
+    to {transform: scaleX(1); opacity: 1;}    
+}
 /* Área de Perfil */
 .profile-section {
     display: flex;

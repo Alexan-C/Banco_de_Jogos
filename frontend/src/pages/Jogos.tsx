@@ -10,7 +10,7 @@ interface Jogo {
   categoria: string;
   capa_url: string;
   
-//   capa_url: string; 
+ 
 }
 const Jogos = () => {
     const [jogos, setJogos] = useState<Jogo[]>([]);
