@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 
 interface Jogo {
+  id: number;
   ano: number;
   nome: string;
   descricao: string;
@@ -47,11 +48,17 @@ export function Home() {
         const timer = setInterval(proximoJogo, 6000);
         return () => clearInterval(timer);
     }, [proximoJogo, jogos.length]);
+    
 
     if(carregando) return <div className="carregando-Holograma">Iniciando projeção...</div>
     if(jogos.length === 0) return <div className="erro-Holograma">Nenhum dado encontrado</div>
     
     const jogo = jogos[indice];
+    const handleVincularClick = () => {
+  // Passamos o ID do jogo atual para a rota /jogos
+  navigate('/jogos', { state: { abrirJogoId: jogo.id } });
+};
+
 
 
 
@@ -84,7 +91,7 @@ return (
             <p className="description-Estilo">{jogo.descricao}</p>
             
             <div className="action-area">
-              <button className="btn-Estilo-action" onClick={() => navigate('/jogos')}>
+              <button className="btn-Estilo-action" onClick={handleVincularClick}>
                 Vincular Jogo
               </button>
             </div>

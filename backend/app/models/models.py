@@ -1,10 +1,16 @@
-from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, event
 from sqlalchemy.orm import declarative_base, relationship
 
-db = create_engine("sqlite:///banco.db")
+db = create_engine("sqlite:///banco.db", echo=True)
 
 Base = declarative_base()
 
+
+@event.listens_for(db, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 class Usuario(Base):
     __tablename__ = "usuarios"
@@ -17,7 +23,7 @@ class Usuario(Base):
     ativo = Column("ativo", Boolean, default=True)
 
 
-    jogos = relationship("Biblioteca", back_populates="usuario")
+    jogos = relationship("Biblioteca", back_populates="usuario", cascade="all, delete-orphan")
     
     def __init__(self,nome, email, senha, ativo= True, admin= False):
         self.nome = nome
@@ -38,7 +44,7 @@ class Jogo(Base):
     descricao = Column(String)
     capa_url = Column(String)
 
-    jogos_usuarios = relationship("Biblioteca", back_populates="jogo")
+    jogos_usuarios = relationship("Biblioteca", back_populates="jogo", cascade="all, delete-orphan")
 
     def __init__(self,nome, categoria, ano, descricao, capa_url):
             self.nome = nome
@@ -51,8 +57,8 @@ class Biblioteca(Base):
     __tablename__ = "biblioteca"
 
     id = Column(Integer, primary_key=True)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
-    jogo_id = Column(Integer, ForeignKey("jogos.id"))
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), index=True)
+    jogo_id = Column(Integer, ForeignKey("jogos.id", ondelete="CASCADE"), index=True)
     
     plataforma = Column(String, nullable=False)
     subcategoria = Column(String, nullable=True)

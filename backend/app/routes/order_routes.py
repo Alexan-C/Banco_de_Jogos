@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Path
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.dependencies.dependencies import verificar_token, pegar_sessao, Usuario
 from app.schemas.schemas import JogoCreateSchema,VinculoJogoSchema
 from app.models.models import Jogo, Biblioteca
 from typing import Optional
+from sqlalchemy import func
 
 
 order_router = APIRouter(prefix="/pedidos", tags=["pedidos"])
@@ -99,34 +100,46 @@ async def vincular_jogo(dados: VinculoJogoSchema,session: Session = Depends(pega
 @order_router.get("/minha_biblioteca")
 async def listar_minha_biblioteca(session: Session = Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):
      
-     resultados = session.query(Biblioteca).filter(Biblioteca.usuario_id == usuario.id).all()
+     resultados = session.query(Biblioteca).options(joinedload(Biblioteca.jogo)).filter(Biblioteca.usuario_id == usuario.id).all()
 
      if not resultados:
           return {"mensagem": "Sua Biblioteca ainda está vazia", "jogos": []}
      
      biblioteca_dict = {}
+
      for item in resultados:
-          jogo_id = item.jogo.id
+        jogo_id = item.jogo.id
+               
+          
     
-     if jogo_id not in biblioteca_dict:
+        if jogo_id not in biblioteca_dict:
             biblioteca_dict[jogo_id] = {
-                    "id": item.jogo.id,
-                    "nome": item.jogo.nome,
-                    "categoria": item.jogo.categoria,
-                    "ano": item.jogo.ano,
-                    "descricao": item.jogo.descricao,
-                    "capa_url": item.jogo.capa_url,
-                    "detalhes_plataformas": []
-               }
-     biblioteca_dict[jogo_id]["detalhes_plataformas"].append({
-          "plataforma": item.plataforma,
-          "subcategora": item.subcategoria
-     })
+                "id": item.jogo.id,
+                "nome": item.jogo.nome,
+                "categoria": item.jogo.categoria,
+                "ano": item.jogo.ano,
+                "descricao": item.jogo.descricao,
+                "capa_url": item.jogo.capa_url,
+                "detalhes_plataformas": []
+            }
+
+        biblioteca_dict[jogo_id]["detalhes_plataformas"].append({
+            "plataforma": item.plataforma,
+            "subcategoria": item.subcategoria  
+        })
+
      return list(biblioteca_dict.values())
 
-@order_router.delete("/desvincular/{vinculo_id}")
+@order_router.delete("/desvincular/{jogo_id}")
 async def desvincular_especifico(jogo_id: int, plataforma: str, subcategoria: Optional[str] = None, session: Session = Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):
-     query = session.query(Biblioteca).filter(Biblioteca.usuario_id == usuario.id, Biblioteca.jogo_id == jogo_id, Biblioteca.plataforma == plataforma, Biblioteca.subcategoria == subcategoria )
+     query = session.query(Biblioteca).filter(Biblioteca.usuario_id == usuario.id, Biblioteca.jogo_id == jogo_id, Biblioteca.plataforma == plataforma)
+
+     if subcategoria is None or subcategoria == "":
+        query = query.filter(Biblioteca.subcategoria.is_(None))
+     else:
+      query = query.filter(
+       func.lower(Biblioteca.subcategoria) == subcategoria.lower()
+    )
      
      vinculo = query.first()
      if not vinculo:

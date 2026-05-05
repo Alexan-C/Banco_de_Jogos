@@ -6,7 +6,7 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background-color: rgba(30, 29, 79, 0.8);
+    background: linear-gradient(180deg, #13111c 0%, #0d0c12 100%);
     backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
