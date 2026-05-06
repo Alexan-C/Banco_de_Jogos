@@ -1,324 +1,332 @@
+.carregando-Holograma
+
 /* ================= GRID ================= */
 .jogos-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 /* ================= CARD ================= */
 .card-jogo-minimalista {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 2 / 3;
-    border-radius: 10px;
-    background-color: #1a1825;
-    overflow: hidden; /* Essencial para o zoom funcionar sem vazar */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(125, 96, 190, 0.1);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  background-color: #1a1825;
+  overflow: hidden; /* Essencial para o zoom funcionar sem vazar */
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  border: 1px solid rgba(125, 96, 190, 0.1);
 }
 
 /* Estilo da Imagem - Removido o translate que causava o erro */
-.card-jogo-minimalista img, 
+.card-jogo-minimalista img,
 .capa-principal {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center top;
-    /* Removido: transform translate(-50%, -50%) */
-    /* Removido: position: static (deixe o padrão) */
-    transition: transform 0.5s ease;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  /* Removido: transform translate(-50%, -50%) */
+  /* Removido: position: static (deixe o padrão) */
+  transition: transform 0.5s ease;
 }
 
 /* Hover no Container */
 .card-jogo-minimalista:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(92, 31, 224, 0.15);
-    border-color: rgba(110, 50, 238, 0.4);
-    z-index: 10;
-    cursor: pointer;
+  transform: translateY(-10px);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(92, 31, 224, 0.15);
+  border-color: rgba(110, 50, 238, 0.4);
+  z-index: 10;
+  cursor: pointer;
 }
 
 /* Efeito de Zoom na Imagem - Sem encolher */
 .card-jogo-minimalista:hover img,
 .card-jogo-minimalista:hover .capa-principal {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 /* Feedback de clique simples */
 .card-jogo-minimalista:active {
-    transform: translateY(-5px) scale(0.98);
+  transform: translateY(-5px) scale(0.98);
 }
 
 /* Limpeza de regras antigas que diminuíam a imagem */
 .card-jogo-minimalista:active .capa-principal,
 .card-jogo-minimalista:hover .capa-principal {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
 /* Overlay */
 .card-overlay-minimalista {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: flex-end;
-    padding: 15px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 3;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 15px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
 }
 
 .card-jogo-minimalista:hover .card-overlay-minimalista {
-    opacity: 1;
+  opacity: 1;
 }
 
 .card-overlay-minimalista span {
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-transform: uppercase;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 /* ================= CONTAINER ================= */
 .biblioteca-container {
-    padding: 40px;
-    min-height: 100vh;
+  padding: 40px;
+  min-height: 100vh;
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-    background: linear-gradient(180deg, #13111c 0%, #0d0c12 100%);
-    background-image: radial-gradient(circle at 50% 30%, #1e1b2e 0%, #0d0c12 100%);
+  background: linear-gradient(180deg, #13111c 0%, #0d0c12 100%);
+  background-image: radial-gradient(
+    circle at 50% 30%,
+    #1e1b2e 0%,
+    #0d0c12 100%
+  );
 }
 
 /* ================= POPUP ================= */
 .popup-overlay {
-    position: fixed;
-    inset: 0;
+  position: fixed;
+  inset: 0;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
 
-    z-index: 9999;
-    animation: fadeIn 0.3s ease;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .popup-content {
-    position: absolute;
-    display: flex;
+  position: absolute;
+  display: flex;
 
-    width: 80vw;
-    max-width: 1000px;
-    height: auto;
-    max-height: 85vh;
+  width: 80vw;
+  max-width: 1000px;
+  height: auto;
+  max-height: 85vh;
 
-    border-radius: 20px;
-    overflow: hidden;
+  border-radius: 20px;
+  overflow: hidden;
 
-    background: #0f0f12;
-    box-shadow: 0 1200px 120px rgba(0,0,0,0.9);
+  background: #0f0f12;
+  box-shadow: 0 1200px 120px rgba(0, 0, 0, 0.9);
 
-    animation: scaleIn 0.25s ease;
+  animation: scaleIn 0.25s ease;
 }
 
 @keyframes scaleIn {
-    from {
-        transform: scale(0.95);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ================= POPUP LEFT ================= */
 .popup-left {
-    flex: 1.5;
-    display: flex;
-    position: relative;
-    overflow: hidden;
-    background-color: #0f0f12;
+  flex: 1.5;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  background-color: #0f0f12;
 }
 
 .popup-left img {
-    width: 100%; 
-    height: auto;
-    background-color: transparent;
-    align-items: flex-start;
-    object-fit: cover; 
-    object-position: center top;
-    z-index: 2;
-    display: block;
-    
+  width: 100%;
+  height: auto;
+  background-color: transparent;
+  align-items: flex-start;
+  object-fit: cover;
+  object-position: center top;
+  z-index: 2;
+  display: block;
 }
 
 .popup-left::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        to right,
-        rgba(15, 15, 18, 0) 70%, 
-        rgba(15, 15, 18, 1) 100%
-    );
-    z-index: 3;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(15, 15, 18, 0) 70%,
+    rgba(15, 15, 18, 1) 100%
+  );
+  z-index: 3;
 }
 .popup-left img.versao-cover {
-    object-fit: cover;
-    object-position: center top; 
-    background: linear-gradient(
-        to right,
-        rgba(15,15,18,0) 60%,
-        rgba(15,15,18,0.8) 85%,
-        #0f0f12 100%
-    );
+  object-fit: cover;
+  object-position: center top;
+  background: linear-gradient(
+    to right,
+    rgba(15, 15, 18, 0) 60%,
+    rgba(15, 15, 18, 0.8) 85%,
+    #0f0f12 100%
+  );
 }
-
 
 /* ================= POPUP RIGHT ================= */
 .popup-right {
-    flex: 1.1;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px; 
+  flex: 1.1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
 }
 
 .popup-title {
-    margin-top: 5px;
-    margin-bottom: 10px;
-    font-size: 2.2rem; /* Reduzi um pouco de 2.8rem */
-    line-height: 1.1;
-    font-weight: 900;
-    color: #fff;
-    margin: 0; 
-    padding-top: 10px;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  font-size: 2.2rem; /* Reduzi um pouco de 2.8rem */
+  line-height: 1.1;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  padding-top: 10px;
 }
 
 /* ================= PLATFORM ================= */
 .platform-group {
-    margin-top: 30px;
+  margin-top: 30px;
 }
 
 .platform-group h4 {
-    color: rgba(255,255,255,0.4);
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 2px;
-    margin-bottom: 15px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
 }
 
 .btn-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 25px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
 }
 
 /* Botões */
 .btn-platform-choice {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 
-    padding: 15px 25px;
-    border-radius: 12px;
+  padding: 15px 25px;
+  border-radius: 12px;
 
-    font-size: 0.95rem;
-    color: #ccc;
+  font-size: 0.95rem;
+  color: #ccc;
 
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
 
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .btn-platform-choice svg {
-    font-size: 1.4rem;
+  font-size: 1.4rem;
 }
 
 .btn-platform-choice:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: #7d60be;
-    color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #7d60be;
+  color: #fff;
 
-    transform: translateY(-3px);
-    box-shadow:
-        0 10px 20px rgba(0, 0, 0, 0.4),
-        0 0 15px rgba(125, 96, 190, 0.2);
+  transform: translateY(-3px);
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.4),
+    0 0 15px rgba(125, 96, 190, 0.2);
 
-    cursor: pointer;
+  cursor: pointer;
 }
 
-
-
-/* PlayStation - Azul */
 .btn-platform-choice.btn-ps.active {
-    background-color: #003087 !important;
-    box-shadow: 0 0 15px rgba(0, 48, 135, 0.5);
+  background-color: #003087 !important;
+  box-shadow: 0 0 15px rgba(0, 48, 135, 0.5);
 }
 
-/* Xbox - Verde */
+
 .btn-platform-choice.btn-xbox.active {
-    background-color: #107c10 !important;
-    box-shadow: 0 0 15px rgba(16, 124, 16, 0.5);
+  background-color: #107c10 !important;
+  box-shadow: 0 0 15px rgba(16, 124, 16, 0.5);
 }
 
-/* Steam - Azul Escuro/Marinho */
 .btn-platform-choice.btn-steam.active {
-    background-color: #1b2838 !important;
-    box-shadow: 0 0 15px rgba(27, 40, 56, 0.6);
+  background-color: #1b2838 !important;
+  box-shadow: 0 0 15px rgba(27, 40, 56, 0.6);
 }
 
-/* Epic Games - Cinza Escuro/Preto */
+
 .btn-platform-choice.btn-epic.active {
-    background-color: #494848 !important;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  background-color: #494848 !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
 
 /* ================= CLOSE BUTTON ================= */
 .close-popup {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
 
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 
-    font-size: 1.5rem;
-    color: #fff;
+  font-size: 1.5rem;
+  color: #fff;
 
-    background: rgba(255,255,255,0.05);
-    border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
 
-    cursor: pointer;
-    transition: 0.3s;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
 .close-popup:hover {
-    background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
 }

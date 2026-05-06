@@ -19,7 +19,7 @@ function AnimationRoutes() {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="minha_biblioteca" element={estaLogado ? <Biblioteca /> : <Navigate to="/login" replace />} />
-        <Route path="jogos" element={estaLogado ? <Jogos /> : <Navigate to="/login" replace />} />
+        <Route path="jogos" element={<Jogos/>} />
         <Route path="admin/adicionar" element={estaLogado && adminSalvo ? <Addjogos /> : <Navigate to="/login" replace />} />
       </Route>
       <Route path="/login" element={<Form />} />

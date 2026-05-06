@@ -1,24 +1,47 @@
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session, joinedload
 from typing import List
-from app.dependencies.dependencies import verificar_token, pegar_sessao, Usuario
+from app.dependencies.dependencies import verificar_token, pegar_sessao, Usuario, obter_usuario_opcional
 from app.schemas.schemas import JogoCreateSchema,VinculoJogoSchema
 from app.models.models import Jogo, Biblioteca
 from typing import Optional
 from sqlalchemy import func
 
 
+
 order_router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 
-@order_router.get("/list") 
-async def listar_todos_os_jogos(session: Session = Depends(pegar_sessao)):
-
+@order_router.get("/list")
+async def listar_todos_os_jogos(
+    session: Session = Depends(pegar_sessao), 
+    usuario_id: Optional[int] = Depends(obter_usuario_opcional)
+):
     jogos = session.query(Jogo).all()
-       
-    if not jogos:
-        return {"mensagem": "Nenhum jogo cadastrado ainda.", "jogos": []}
+    
+
+    meus_vinculos = []
+    if usuario_id:
+        meus_vinculos = session.query(Biblioteca).filter(
+            Biblioteca.usuario_id == usuario_id
+        ).all()
+
+    resposta = []
+    for jogo in jogos:
+        vinc_usuario = [v for v in meus_vinculos if int(v.jogo_id) == int(jogo.id)]
         
-    return jogos
+        resposta.append({
+            "id": jogo.id,
+            "nome": jogo.nome,
+            "capa_url": jogo.capa_url,
+            "categoria": jogo.categoria,
+            "descricao": jogo.descricao,
+            "detalhes_plataformas": [
+                {"plataforma": v.plataforma, "subcategoria": v.subcategoria} 
+                for v in vinc_usuario
+            ]
+        })
+        
+    return resposta
 
 @order_router.post("/jogo/adicionar_jogo")
 async def adicionar_jogos(adicionar_jogo: JogoCreateSchema, session: Session = Depends(pegar_sessao), usuario: Usuario = Depends(verificar_token)):

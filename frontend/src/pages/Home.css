@@ -15,24 +15,33 @@
   scrollbar-width: thin;
   scrollbar-color: #4456aa #0f0f12;
 }
+
+
 .home-container {
   background: #0a0a0c;
-  min-height: 100vh;
-  position: relative;
+  height: 100vh;
+  width: 100%; 
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
   overflow: hidden;
+  flex-direction: column;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 20px;
+  padding-top: 5vh;
 }
 
 .dynamic-background {
   position: absolute;
-  inset: -30px; 
+  inset: -100px; 
   background-size: cover;
   background-position: center;
-  filter: blur(20px) brightness(1.5); 
+  filter: blur(40px) brightness(1.2);
   z-index: 0;
-  transform: scale(1.1);
+  transform: scale(1.3); 
 }
 
 .vignette-overlay {
@@ -46,14 +55,16 @@
 .glass-effect-card {
   position: relative;
   z-index: 2;
-  width: 90vw;
-  max-width: 1200px;
-  height: 75vh;
-  border-radius: 20px;
+  width: 90%; 
+  max-width: 1400px;
+  height: auto;
+  min-height: 550px;
+  max-height: 90vh;
+  border-radius: 15px;
   overflow: hidden;
-  background: #000;
-  box-shadow: 0 0 100px 30px rgba(0, 0, 0, 0.9);
-  display: flex; 
+  background: rgba(0,0,0,0.7);
+  box-shadow: 0 0 50px 20px rgba(0, 0, 0, 0.7);
+  display: flex;
 }
 
 /* Camada da Capa (Fundo do Card) */
@@ -61,7 +72,7 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: #000;
+  background: rgba(0,0,0,0.3);
   display: flex;
   justify-content: center;
 }
@@ -117,6 +128,7 @@
   justify-content: center;
   animation: fadeInnext 0.8s ease-out;
 }
+
 @keyframes fadeInText {
   from {
     opacity: 0;
@@ -186,6 +198,7 @@
 .viewport-Estilo {
   display: contents;
   align-items: center;
+  position: relative;
   width: 100%;
   justify-content: space-between;
   padding: 0 20px;
@@ -194,7 +207,7 @@
 .nav-arrow {
 
 position: absolute;
-  top: 50%;
+  top: 40%;
   transform: translateY(-50%);
   z-index: 100;
   color: rgba(255, 255, 255, 0.5);
@@ -207,7 +220,7 @@ position: absolute;
   border: none;
   outline: none;
   box-shadow: none;
-  display: flex;
+
   align-items: center;
   justify-content: center;
 }
@@ -220,4 +233,68 @@ position: absolute;
   outline: none;
   border: none;
   box-shadow: none;
+}
+
+/* EFEITO SKELETON */
+.skeleton-card {
+  background: #121214 !important;
+  border: 1px solid #202024;
+}
+
+.skeleton-badge, .skeleton-title, .skeleton-text, .skeleton-button {
+  background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+/* Carregamento */
+.skeleton-badge {
+  width: 80px;
+  height: 20px;
+  margin-bottom: 20px;
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 60px;
+  margin-bottom: 20px;
+}
+
+.skeleton-text {
+  width: 90%;
+  height: 18px;
+  margin-bottom: 10px;
+}
+
+.skeleton-text.short {
+  width: 50%;
+}
+
+.skeleton-button {
+  width: 180px;
+  height: 50px;
+  margin-top: 30px;
+  border-radius: 6px;
+}
+
+/* Ajuste adicional para o texto de erro */
+.erro-Holograma {
+  color: #ff4444;
+  font-family: 'Courier New', Courier, monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+}
+
+/* Media queries para telas de monitores (não notebooks) */
+@media (min-width: 1920px) {
+  .glass-effect-card {
+    max-width: 1600px;
+    min-height: 1100px;
+  }
 }

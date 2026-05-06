@@ -7,6 +7,7 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
+    perspective: 1000px;
 }
 
 /* ================= CARD ================= */
@@ -16,12 +17,11 @@
     aspect-ratio: 2 / 3;
     border-radius: 10px;
     background-color: #1a1825;
-    overflow: hidden; /* Essencial para o zoom funcionar sem vazar */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden; 
     border: 1px solid rgba(125, 96, 190, 0.1);
 }
 
-/* Estilo da Imagem - Removido o translate que causava o erro */
+
 .card-jogo-minimalista img, 
 .capa-principal {
     display: block;
@@ -29,9 +29,6 @@
     height: 100%;
     object-fit: cover;
     object-position: center top;
-    /* Removido: transform translate(-50%, -50%) */
-    /* Removido: position: static (deixe o padrão) */
-    transition: transform 0.5s ease;
 }
 
 /* Hover no Container */
@@ -43,18 +40,16 @@
     cursor: pointer;
 }
 
-/* Efeito de Zoom na Imagem - Sem encolher */
 .card-jogo-minimalista:hover img,
 .card-jogo-minimalista:hover .capa-principal {
     transform: scale(1.1);
 }
 
-/* Feedback de clique simples */
+
 .card-jogo-minimalista:active {
     transform: translateY(-5px) scale(0.98);
 }
 
-/* Limpeza de regras antigas que diminuíam a imagem */
 .card-jogo-minimalista:active .capa-principal,
 .card-jogo-minimalista:hover .capa-principal {
     width: 100% !important;
@@ -206,7 +201,7 @@
 .popup-title {
     margin-top: 5px;
     margin-bottom: 10px;
-    font-size: 2.2rem; /* Reduzi um pouco de 2.8rem */
+    font-size: 2.2rem;
     line-height: 1.1;
     font-weight: 900;
     color: #fff;
@@ -274,7 +269,7 @@
 }
 
 .btn-platform-choice.active {
-    background-color: rgba(125, 96, 190, 0.3); /* Roxo do seu site */
+    background-color: rgba(125, 96, 190, 0.3); 
     border-color: #7d60be; 
     color: #fff;
     box-shadow: 0 0 15px rgba(125, 96, 190, 0.4);
@@ -296,7 +291,57 @@
     border-color: #275081 !important;
     box-shadow: 0 0 20px rgba(27, 40, 56, 0.4) !important;
 }
+.plataformas-sutis-grid {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+  z-index: 5;
+}
 
+.icon-sutil {
+  background: rgba(219, 217, 217, 0.4);
+ 
+  padding: 5px;
+  border-radius: 6px;
+  display: flex;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.5); /* Cor neutra inicial */
+
+}
+
+.card-jogo-minimalista:hover .icon-sutil {
+
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.card-jogo-minimalista .color-xbox { color: #107c10; }
+.card-jogo-minimalista .color-ps5 { color: #00439c; }
+.color-steam { color: #183b47; } 
+.color-epic { color: #ffffff; }  
+.card-jogo-minimalista:hover .icon-sutil.color-xbox {
+  background-color: #107c10; 
+  color: #fff;               
+}
+.card-jogo-minimalista:hover .icon-sutil.color-ps5 {
+  background-color: #00439c;
+  color: #fff;
+}
+.card-jogo-minimalista:hover .icon-sutil.color-pc {
+  background-color: #413d3d;
+  color: #fff;
+}
+
+.card-jogo-minimalista:hover .icon-sutil.color-steam {
+  color: (135deg, #1b2838 0%, #2a475e 50%, #66c0f4 100%);
+  background-color: #ffffff;
+}
+.card-jogo-minimalista:hover .icon-sutil.color-epic {
+  background-color: #333333; 
+  color: #cccccc;
+}
 /* ================= CLOSE BUTTON ================= */
 .close-popup {
     position: absolute;
