@@ -68,7 +68,7 @@
     color: #8A8AA3;
     font-size: 1rem;
     font-weight: 500;
-    text-transform: uppercase; /* Estilo Steam */
+    text-transform: uppercase; 
     letter-spacing: 1px;
     cursor: pointer;
     transition: color 0.3s ease;

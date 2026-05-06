@@ -307,7 +307,7 @@
   border-radius: 6px;
   display: flex;
   transition: all 0.3s ease;
-  color: rgba(255, 255, 255, 0.5); /* Cor neutra inicial */
+  color: rgba(255, 255, 255, 0.5); 
 
 }
 

@@ -67,8 +67,6 @@ const Biblioteca = () => {
       });
   }, []);
 
-  // Escuta evento de clique na busca para abrir jogo sem recarregar
-
 
   const handleVinculo = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -184,7 +182,7 @@ const cardMesaVariants: Variants = {
                     rotateX: 0,
                     transition: { duration: 0.1 },
                   }}
-                  whileTap={{ scale: 0.98 }} // Efeito de pressionar contra a mesa
+                  whileTap={{ scale: 0.98 }} 
                   className="card-jogo-minimalista"
                   onClick={() => {
                     setJogoSelecionado(jogo);

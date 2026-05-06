@@ -117,7 +117,7 @@ export const MainLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* 2. CENTRO: BARRA DE BUSCA */}
+
         <div
           className={`search-container-nav ${mostrarBusca ? "visible" : ""}`}
         >
@@ -140,12 +140,12 @@ export const MainLayout: React.FC = () => {
                         className="search-result-item"
                         onClick={() => {
                           if (location.pathname === "/minha_biblioteca") {
-                            // Já está na biblioteca → dispara evento sem navegar
+  
                             window.dispatchEvent(
                               new CustomEvent("abrirJogo", { detail: jogo.id }),
                             );
                           } else {
-                            // Está em outra página → navega para biblioteca
+
                             navigate("/minha_biblioteca", {
                               state: { abrirJogoId: jogo.id },
                             });
