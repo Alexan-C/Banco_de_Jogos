@@ -169,7 +169,29 @@ const Jogos = () => {
     }
     return "";
   };
+useEffect(() => {
+  const abrirModalComJogo = (id: number) => {
+    const jogoEncontrado = jogos.find((j) => Number(j.id) === Number(id));
+    if (jogoEncontrado) {
+      setJogoSelecionado(jogoEncontrado); 
+      setShowPopup(true); 
+    }
+  };
 
+
+const handleEvent = (e: Event) => {
+    const customEvent = e as CustomEvent; 
+    if (customEvent.detail) {
+      abrirModalComJogo(customEvent.detail);
+    }
+  };
+  window.addEventListener("abrirJogo", handleEvent);
+  if (location.state?.abrirJogoId) {
+    abrirModalComJogo(location.state.abrirJogoId);
+    window.history.replaceState({}, document.title);
+  }
+  return () => window.removeEventListener("abrirJogo", handleEvent);
+}, [jogos, location.state]);
   return (
     <>
       <div className="biblioteca-container">

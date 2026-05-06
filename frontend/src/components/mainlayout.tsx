@@ -117,7 +117,6 @@ export const MainLayout: React.FC = () => {
           </div>
         </div>
 
-
         <div
           className={`search-container-nav ${mostrarBusca ? "visible" : ""}`}
         >
@@ -139,17 +138,21 @@ export const MainLayout: React.FC = () => {
                         key={jogo.id}
                         className="search-result-item"
                         onClick={() => {
-                          if (location.pathname === "/minha_biblioteca") {
-  
+                          const jogoId = jogo.id;
+                          const noCaminhoCerto =
+                            location.pathname === "/minha_biblioteca" ||
+                            location.pathname === "/jogos";
+
+                          if (noCaminhoCerto) {
                             window.dispatchEvent(
-                              new CustomEvent("abrirJogo", { detail: jogo.id }),
+                              new CustomEvent("abrirJogo", { detail: jogoId }),
                             );
                           } else {
-
                             navigate("/minha_biblioteca", {
-                              state: { abrirJogoId: jogo.id },
+                              state: { abrirJogoId: jogoId },
                             });
                           }
+
                           setSearchQuery("");
                         }}
                       >
@@ -240,7 +243,18 @@ export const MainLayout: React.FC = () => {
           <Outlet context={{ searchQuery }} />
         </div>
       </main>
+      <footer className="footer-main">
+        <div className="footer-content">
+          <div className="footer-right">
+            <p className="disclaimer-text">
+  Este site é um projeto de estudo sem fins lucrativos. Todas as imagens e marcas pertencem aos seus respectivos proprietários.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
+
+
 export default MainLayout;

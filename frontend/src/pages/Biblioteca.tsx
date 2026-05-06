@@ -22,11 +22,11 @@ interface Jogo {
   }>;
 }
 const Biblioteca = () => {
- 
   const [jogos, setJogos] = useState<Jogo[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
+  const [erroBusca, setErroBusca] = useState<string | null>(null);
 
   useEffect(() => {
     if (showPopup && jogoSelecionado) {
@@ -66,7 +66,6 @@ const Biblioteca = () => {
         setCarregando(false);
       });
   }, []);
-
 
   const handleVinculo = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -131,34 +130,69 @@ const Biblioteca = () => {
     }, 50);
   };
 
-const cardMesaVariants: Variants = {
-  hidden: {
-    opacity: 0,
-    y: -50,
-    rotateX: 15,
-    scale: 1.1,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    rotateX: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20,
+  const cardMesaVariants: Variants = {
+    hidden: {
+      opacity: 0,
+      y: -50,
+      rotateX: 15,
+      scale: 1.1,
     },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.9,
-    y: 20,
-    transition: { duration: 0.2 },
-  },
-};
+    visible: {
+      opacity: 1,
+      y: 0,
+      rotateX: 0,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 20,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.9,
+      y: 20,
+      transition: { duration: 0.2 },
+    },
+  };
+
+  useEffect(() => {
+    const handleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<number>;
+
+if (customEvent.detail) {
+        const jogoEncontrado = jogos.find(
+          (j) => Number(j.id) === Number(customEvent.detail),
+        );
+
+        if (jogoEncontrado) {
+          setJogoSelecionado(jogoEncontrado);
+          setShowPopup(true);
+          setErroBusca(null);
+        } else {
+          setErroBusca("Você não vinculou esse Jogo");
+
+          setTimeout(() => {
+            setErroBusca(null);
+          }, 3000);
+        }
+      }
+    };
+
+    window.addEventListener("abrirJogo", handleEvent);
+
+    return () => {
+      window.removeEventListener("abrirJogo", handleEvent);
+    };
+  }, [jogos]);
 
   return (
     <>
+    {erroBusca && (
+  <div className="popup-erro">
+    {erroBusca}
+  </div>
+         )}
       <div className="biblioteca-container">
         {carregando ? (
           <div
@@ -182,7 +216,7 @@ const cardMesaVariants: Variants = {
                     rotateX: 0,
                     transition: { duration: 0.1 },
                   }}
-                  whileTap={{ scale: 0.98 }} 
+                  whileTap={{ scale: 0.98 }}
                   className="card-jogo-minimalista"
                   onClick={() => {
                     setJogoSelecionado(jogo);
