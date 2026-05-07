@@ -36,7 +36,7 @@ export function Login(){
         try {
             // Define a rota baseada no modo
             const rota = modoLogin ? '/auth/login' : '/auth/criar_conta';
-            const corpo = modoLogin ? { nome, email, senha} : { nome, email, senha};
+            const corpo = modoLogin ? { email, senha} : { nome, email, senha};
 
             const response = await api.post(rota, corpo);
 
@@ -118,7 +118,7 @@ export function Login(){
                                     <div className='input-group'>
                                         <label>Senha</label>
                                         <div className='mostrarSenhaDiv'>
-                                        <input type={mostrarSenha ? "text" : "password"} id='senha' placeholder= 'Digite sua senha' onChange={(e) => setSenha(e.target.value)} value={senha}/>
+                                        <input type={mostrarSenha ? "text" : "password"} id='senha' placeholder= 'Digite sua senha' onChange={(e) => setSenha(e.target.value)} value={senha} maxLength={72}/>
 
                                         <button type='button' className='mostrarSenha'
                                         onClick={() => setMostrarSenha(!mostrarSenha)}
@@ -131,7 +131,7 @@ export function Login(){
                                         <div className='input-group'>
                                             <label>Confirme sua Senha</label>
                                             <div className='mostrarSenhaDiv'>
-                                                <input type={ mostrarSenha ? "text" : "password"} placeholder='Repita sua senha' onChange={(e) => setConfirmarSenha(e.target.value)}value={confirmarSenha}/>
+                                                <input type={ mostrarSenha ? "text" : "password"} placeholder='Repita sua senha' onChange={(e) => setConfirmarSenha(e.target.value)}value={confirmarSenha} maxLength={72}/>
 
                                             </div>
                                         </div>
