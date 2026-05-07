@@ -1,39 +1,44 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
+const getToken = () =>
+  localStorage.getItem("token") || sessionStorage.getItem("token");
 
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
+  const token = getToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
 });
 
+let isRedirecting = false;
 
 api.interceptors.response.use(
-    (response) => {
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && !isRedirecting) {
+      isRedirecting = true;
 
-        return response;
-    },
-    (error) => {
+      console.warn("Sessão expirada. Redirecionando...");
 
-        if (error.response && error.response.status === 401) {
-            console.warn("Sessão expirada. Redirecionando...");
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
 
-            localStorage.removeItem('token'); 
-
-            window.location.href = '/login';
-        }
-        
-        return Promise.reject(error);
+      window.location.href = "/login";
     }
+
+    return Promise.reject(error);
+  }
 );
 
 export default api;
-

@@ -1,10 +1,11 @@
-
-import api from "../services/api";
-import "./Home.css"
-import { useState, useEffect, useCallback} from "react"
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import api from "../services/api";
+import "./Home.css";
+
 interface Jogo {
   id: number;
   ano: number;
@@ -12,7 +13,6 @@ interface Jogo {
   descricao: string;
   categoria: string;
   capa_url: string;
-  
 }
 
 const cardMesaVariants: Variants = {
@@ -38,65 +38,69 @@ const cardMesaVariants: Variants = {
     },
   },
 };
+
 export function Home() {
-  const [jogos, setJogos] = useState<Jogo[]>([]);
   const [indice, setIndice] = useState(0);
-  const [carregando, setCarregando] = useState(true);
   const [estaAnimando, setEstaAnimando] = useState(false);
 
   const navigate = useNavigate();
 
-useEffect(() => {
-    let montado = true;
+  const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
+    queryKey: ["home-jogos"],
+    queryFn: async () => {
+      const res = await api.get("pedidos/list");
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-    api.get('pedidos/list')
-      .then(res => {
-        if (!montado) return;
-        const listaValida = Array.isArray(res.data) ? res.data : [];
-        if (listaValida.length > 0) {
-          setJogos(listaValida);
-          setIndice(Math.floor(Math.random() * listaValida.length));
-        }
-      })
-      .catch(err => console.error("Erro na API:", err))
-      .finally(() => {
-        if (montado) setCarregando(false);
-      });
+  const jogo = jogos[indice % jogos.length];
 
-    return () => { montado = false; };
-  }, []);
-
-   const proximoJogo = useCallback(() => {
-    if (jogos.length === 0 || estaAnimando) return;
+  const proximoJogo = useCallback(() => {
+    if (jogos.length <= 1 || estaAnimando) return;
     setEstaAnimando(true);
     setIndice((prev) => (prev + 1) % jogos.length);
   }, [jogos.length, estaAnimando]);
 
   const jogoAnterior = useCallback(() => {
-    if (jogos.length === 0 || estaAnimando) return;
+    if (jogos.length <= 1 || estaAnimando) return;
     setEstaAnimando(true);
     setIndice((prev) => (prev - 1 + jogos.length) % jogos.length);
   }, [jogos.length, estaAnimando]);
-  
-useEffect(() => {
-    if (jogos.length <= 1 || carregando) return;
-
-    const timer = setInterval(proximoJogo, 7000);
-    return () => clearInterval(timer);
-  }, [proximoJogo, jogos.length, carregando]);
 
 useEffect(() => {
-  // Trava o scroll no body ao entrar
-  document.body.style.overflow = 'hidden';
-  document.body.style.margin = '0';
-  
-  return () => {
-   
-    document.body.style.overflow = 'auto';
-  };
+  if (jogos.length <= 1 || carregando) return;
+
+  const timer = setInterval(() => {
+    setEstaAnimando((animando) => {
+      if (animando) return animando;
+      proximoJogo();
+      return animando;
+    });
+  }, 7000);
+
+  return () => clearInterval(timer);
+}, [proximoJogo, jogos.length, carregando]);
+
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.body.style.margin = "0";
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+  useEffect(() => {
+    document.title = "GameVault";
 }, []);
 
-if (carregando) {
+  const backgroundStyle = useMemo(() => {
+    if (!jogo?.capa_url) return {};
+    return { backgroundImage: `url(${jogo.capa_url})` };
+  }, [jogo?.capa_url]);
+
+  if (carregando) {
     return (
       <div className="home-container">
         <div className="vignette-overlay"></div>
@@ -113,39 +117,33 @@ if (carregando) {
       </div>
     );
   }
-    if (jogos.length === 0) {
+
+  if (jogos.length === 0) {
     return (
       <div className="home-container">
         <div className="vignette-overlay"></div>
-        <p style={{color: 'white', textAlign: 'center', marginTop: '20%'}}>
+        <p style={{ color: "white", textAlign: "center", marginTop: "20%" }}>
           Nenhum jogo disponível na projeção.
         </p>
       </div>
     );
   }
-    const jogo = jogos[indice];
 
-
-
-
-return (
+  return (
     <div className="home-container">
-
-      <div
-        className="dynamic-background"
-        style={{ backgroundImage: `url(${jogo?.capa_url})` }}
-      ></div>
+      <div className="dynamic-background" style={backgroundStyle}></div>
       <div className="vignette-overlay"></div>
 
       <main className="viewport-Estilo">
-        <button 
-          className="nav-arrow left" 
-          onClick={jogoAnterior} 
+        <button
+          className="nav-arrow left"
+          onClick={jogoAnterior}
           disabled={estaAnimando}
-        >‹</button>
+        >
+          ‹
+        </button>
 
         <AnimatePresence mode="wait">
-       
           <motion.div
             key={jogo?.id || indice}
             variants={cardMesaVariants}
@@ -157,20 +155,28 @@ return (
           >
             <div className="background-poster-wrapper">
               {jogo?.capa_url && (
-                <img src={jogo.capa_url} alt={jogo.nome} className="main-poster-full" />
+                <img
+                  src={jogo.capa_url}
+                  alt={jogo?.nome || "Capa do Jogo"}
+                  className="main-poster-full"
+                />
               )}
               <div className="scanline-effect"></div>
               <div className="info-gradient-overlay"></div>
             </div>
 
             <div className="info-section-Estilo">
-              <div className="badge-categoria">{jogo?.categoria || 'Digital Game'}</div>
+              <div className="badge-categoria">
+                {jogo?.categoria || "Digital Game"}
+              </div>
               <h1 className="title-Estilo">{jogo?.nome}</h1>
               <p className="description-Estilo">{jogo?.descricao}</p>
               <div className="action-area">
-                <button 
-                  className="btn-Estilo-action" 
-                  onClick={() => navigate('/jogos', { state: { abrirJogoId: jogo.id } })}
+                <button
+                  className="btn-Estilo-action"
+                  onClick={() =>
+                    navigate("/jogos", { state: { abrirJogoId: jogo.id } })
+                  }
                 >
                   Vincular Jogo
                 </button>
@@ -179,14 +185,16 @@ return (
           </motion.div>
         </AnimatePresence>
 
-        <button 
-          className="nav-arrow right" 
-          onClick={proximoJogo} 
+        <button
+          className="nav-arrow right"
+          onClick={proximoJogo}
           disabled={estaAnimando}
-        >›</button>
+        >
+          ›
+        </button>
       </main>
     </div>
   );
 }
 
-export default Home
+export default Home;

@@ -23,9 +23,11 @@ from app.routes.order_routes import order_router
 app.include_router(auth_router)
 app.include_router(order_router)
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # Libera para todos os links da Vercel
+    # allow_origins = ["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

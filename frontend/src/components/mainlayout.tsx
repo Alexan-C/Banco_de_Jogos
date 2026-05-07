@@ -90,6 +90,9 @@ export const MainLayout: React.FC = () => {
     );
   }, [searchQuery, todosOsJogos]);
 
+  useEffect(() => {
+    document.title = "Gerenciar";
+}, []);
   return (
     <div className="layout-wrapper">
       <nav className="navbar-main">

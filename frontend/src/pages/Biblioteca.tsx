@@ -1,12 +1,18 @@
 import "../pages/Biblioteca.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import api from "../services/api";
-import { gerenciarVinculo, sincronizarBotoesPopup } from "../services/vinculo";
 import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
 import { SiEpicgames } from "react-icons/si";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  desvincularJogo,
+  vincularJogo,
+  tratarErroApi,
+} from "../services/vinculo";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Jogo {
   id: number;
@@ -22,112 +28,85 @@ interface Jogo {
   }>;
 }
 const Biblioteca = () => {
-  const [jogos, setJogos] = useState<Jogo[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [erroBusca, setErroBusca] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
-  const [erroBusca, setErroBusca] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (showPopup && jogoSelecionado) {
-      sincronizarBotoesPopup(jogoSelecionado.id);
-    }
-  }, [showPopup, jogoSelecionado]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { searchQuery } = useOutletContext<{ searchQuery: string }>();
 
-  const getPlatformClass = (p: {
-    plataforma: string;
-    subcategoria: string | null;
-  }) => {
-    const plataforma = p.plataforma.toUpperCase();
-    const sub = p.subcategoria?.toUpperCase();
+  const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
+    queryKey: ["biblioteca"],
+    queryFn: async () => {
+      const response = await api.get("pedidos/minha_biblioteca");
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-    if (plataforma === "XBOX") return "color-xbox";
-    if (plataforma === "PS5") return "color-ps5";
+  const queryClient = useQueryClient();
 
-    if (plataforma === "PC") {
-      if (sub === "STEAM") return "color-steam";
-      if (sub === "EPIC") return "color-epic";
-    }
-    return "";
-  };
-
-  useEffect(() => {
-    api
-      .get("pedidos/minha_biblioteca")
-      .then((res) => {
-        const listaValida = Array.isArray(res.data) ? res.data : [];
-        setJogos(listaValida);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar jogos", err);
-        setJogos([]);
-      })
-      .finally(() => {
-        setCarregando(false);
-      });
-  }, []);
-
-  const handleVinculo = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-    plataforma: string,
-    sub: string | null,
-  ) => {
+  const handleVinculo = async (plataforma: string, sub: string | null) => {
     if (!jogoSelecionado) return;
 
-    await gerenciarVinculo(
-      e.currentTarget,
-      jogoSelecionado.id,
-      plataforma,
-      sub,
+    const jaExiste = jogoSelecionado.detalhes_plataformas?.some(
+      (p) => p.plataforma === plataforma && p.subcategoria === sub,
     );
 
-    setJogos((jogosAtuais) => {
-      const novaLista = jogosAtuais
-        .map((j) => {
-          if (j.id === jogoSelecionado.id) {
-            const jaExiste = j.detalhes_plataformas?.some(
-              (p) => p.plataforma === plataforma && p.subcategoria === sub,
-            );
-
-            if (jaExiste) {
-              return {
-                ...j,
-                detalhes_plataformas: j.detalhes_plataformas?.filter(
-                  (p) =>
-                    !(p.plataforma === plataforma && p.subcategoria === sub),
-                ),
-              };
-            } else {
-              return {
-                ...j,
-                detalhes_plataformas: [
-                  ...(j.detalhes_plataformas || []),
-                  { plataforma, subcategoria: sub },
-                ],
-              };
-            }
-          }
-          return j;
-        })
-
-        .filter(
-          (j) => j.detalhes_plataformas && j.detalhes_plataformas.length > 0,
-        );
-
-      const aindaExiste = novaLista.some((j) => j.id === jogoSelecionado.id);
-      if (!aindaExiste) {
-        setTimeout(() => {
-          setShowPopup(false);
-          setJogoSelecionado(null);
-        }, 100);
+    try {
+      if (jaExiste) {
+        await desvincularJogo(jogoSelecionado.id, plataforma, sub);
+      } else {
+        await vincularJogo({
+          jogo_id: jogoSelecionado.id,
+          plataforma,
+          subcategoria: sub,
+        });
       }
 
-      return novaLista;
-    });
+      // Atualiza o Cache Global
+      queryClient.setQueryData<Jogo[]>(["biblioteca"], (prev = []) => {
+        const novosJogos = prev.map((j) => {
+          if (j.id !== jogoSelecionado.id) return j;
+          const plataformas = j.detalhes_plataformas || [];
+          return {
+            ...j,
+            detalhes_plataformas: jaExiste
+              ? plataformas.filter(
+                  (p) =>
+                    !(p.plataforma === plataforma && p.subcategoria === sub),
+                )
+              : [...plataformas, { plataforma, subcategoria: sub }],
+          };
+        });
 
-    setTimeout(() => {
-      if (jogoSelecionado) sincronizarBotoesPopup(jogoSelecionado.id);
-    }, 50);
+        // Se removeu a última plataforma, remove o jogo da lista
+        if (jaExiste && jogoSelecionado.detalhes_plataformas?.length === 1) {
+          setShowPopup(false);
+          setJogoSelecionado(null);
+          return novosJogos.filter((j) => j.id !== jogoSelecionado.id);
+        }
+
+        return novosJogos;
+      });
+
+      // Atualiza o Modal local
+      setJogoSelecionado((prev) => {
+        if (!prev) return null;
+        const plataformas = prev.detalhes_plataformas || [];
+        return {
+          ...prev,
+          detalhes_plataformas: jaExiste
+            ? plataformas.filter(
+                (p) => !(p.plataforma === plataforma && p.subcategoria === sub),
+              )
+            : [...plataformas, { plataforma, subcategoria: sub }],
+        };
+      });
+    } catch (err) {
+      alert(tratarErroApi(err));
+    }
   };
 
   const cardMesaVariants: Variants = {
@@ -156,26 +135,98 @@ const Biblioteca = () => {
     },
   };
 
+  const jogosFiltrados = useMemo(() => {
+    return jogos.filter((jogo) =>
+      jogo.nome.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [jogos, searchQuery]);
+
+  const getPlatformClass = (p: {
+    plataforma: string;
+    subcategoria: string | null;
+  }) => {
+    const plataforma = p.plataforma.toUpperCase();
+    const sub = p.subcategoria?.toUpperCase();
+
+    if (plataforma === "XBOX") return "color-xbox";
+    if (plataforma === "PS5") return "color-ps5";
+
+    if (plataforma === "PC") {
+      if (sub === "STEAM") return "color-steam";
+      if (sub === "EPIC") return "color-epic";
+    }
+    return "";
+  };
+
+  useEffect(() => {
+    const abrirModalComJogo = (id: number) => {
+      const jogoEncontrado = jogos.find((jogo) => jogo.id === id);
+      if (jogoEncontrado) {
+        setJogoSelecionado(jogoEncontrado);
+        setShowPopup(true);
+      }
+    };
+    const handleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<number>;
+
+      if (customEvent.detail) {
+        abrirModalComJogo(customEvent.detail);
+      }
+    };
+
+    window.addEventListener("abrirJogo", handleEvent);
+
+    if (location.state?.abrirJogoId) {
+      abrirModalComJogo(location.state.abrirJogoId);
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
+    }
+    return () => {
+      window.removeEventListener("abrirJogo", handleEvent);
+    };
+  }, [jogos, location.state, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (showPopup) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showPopup]);
+
+  const jogoTemPlataforma = (plataforma: string, sub: string | null) => {
+    return jogoSelecionado?.detalhes_plataformas?.some(
+      (p) => p.plataforma === plataforma && p.subcategoria === sub,
+    );
+  };
+
   useEffect(() => {
     const handleEvent = (e: Event) => {
       const customEvent = e as CustomEvent<number>;
 
-if (customEvent.detail) {
-        const jogoEncontrado = jogos.find(
-          (j) => Number(j.id) === Number(customEvent.detail),
-        );
+      if (!customEvent.detail) return;
 
-        if (jogoEncontrado) {
-          setJogoSelecionado(jogoEncontrado);
-          setShowPopup(true);
+      const jogoEncontrado = jogos.find(
+        (j) => j.id === Number(customEvent.detail),
+      );
+
+      if (jogoEncontrado) {
+        setJogoSelecionado(jogoEncontrado);
+        setShowPopup(true);
+        setErroBusca(null);
+      } else {
+        setErroBusca("Você não vinculou esse jogo");
+
+        setTimeout(() => {
           setErroBusca(null);
-        } else {
-          setErroBusca("Você não vinculou esse Jogo");
-
-          setTimeout(() => {
-            setErroBusca(null);
-          }, 3000);
-        }
+        }, 3000);
       }
     };
 
@@ -186,13 +237,12 @@ if (customEvent.detail) {
     };
   }, [jogos]);
 
+    useEffect(() => {
+    document.title = "Biblioteca";
+}, []);
   return (
     <>
-    {erroBusca && (
-  <div className="popup-erro">
-    {erroBusca}
-  </div>
-         )}
+      {erroBusca && <div className="popup-erro">{erroBusca}</div>}
       <div className="biblioteca-container">
         {carregando ? (
           <div
@@ -203,7 +253,7 @@ if (customEvent.detail) {
         ) : (
           <div className="jogos-grid">
             <AnimatePresence mode="popLayout">
-              {jogos.map((jogo) => (
+              {jogosFiltrados.map((jogo) => (
                 <motion.div
                   layout
                   key={jogo.id}
@@ -291,16 +341,18 @@ if (customEvent.detail) {
                   <h4>Vincular ao Console</h4>
                   <div className="btn-row">
                     <button
-                      className="btn-platform-choice btn-ps"
-                      data-plataforma="PS5"
-                      onClick={(e) => handleVinculo(e, "PS5", null)}
+                      className={`btn-platform-choice btn-ps ${
+                        jogoTemPlataforma("PS5", null) ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("PS5", null)}
                     >
                       <FaPlaystation /> PlayStation
                     </button>
                     <button
-                      className="btn-platform-choice btn-xbox"
-                      data-plataforma="XBOX"
-                      onClick={(e) => handleVinculo(e, "XBOX", null)}
+                      className={`btn-platform-choice btn-xbox ${
+                        jogoTemPlataforma("XBOX", null) ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("XBOX", null)}
                     >
                       <FaXbox /> Xbox
                     </button>
@@ -309,18 +361,18 @@ if (customEvent.detail) {
                   <h4>Vincular ao PC</h4>
                   <div className="btn-row">
                     <button
-                      className="btn-platform-choice btn-epic"
-                      data-plataforma="PC"
-                      data-sub="Epic"
-                      onClick={(e) => handleVinculo(e, "PC", "Epic")}
+                      className={`btn-platform-choice btn-epic ${
+                        jogoTemPlataforma("PC", "Epic") ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("PC", "Epic")}
                     >
                       <SiEpicgames /> Epic Games
                     </button>
                     <button
-                      className="btn-platform-choice btn-steam"
-                      data-plataforma="PC"
-                      data-sub="Steam"
-                      onClick={(e) => handleVinculo(e, "PC", "Steam")}
+                      className={`btn-platform-choice btn-steam ${
+                        jogoTemPlataforma("PC", "Steam") ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("PC", "Steam")}
                     >
                       <FaSteam /> Steam
                     </button>

@@ -1,13 +1,14 @@
 import "../pages/Jogos.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import api from "../services/api";
 import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
 import { SiEpicgames } from "react-icons/si";
-import { gerenciarVinculo, sincronizarBotoesPopup } from "../services/vinculo";
-import { useLocation } from "react-router-dom";
+import {desvincularJogo,vincularJogo,tratarErroApi} from "../services/vinculo";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Jogo {
   id: number;
@@ -24,97 +25,114 @@ interface Jogo {
 }
 
 const Jogos = () => {
-  const [jogos, setJogos] = useState<Jogo[]>([]);
-  const [carregando, setCarregando] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
 
   const location = useLocation();
+  const navigate = useNavigate();
+  const { searchQuery } = useOutletContext<{ searchQuery: string }>();
 
-  
-  useEffect(() => {
-    if (showPopup && jogoSelecionado) {
-      const timer = setTimeout(() => {
-        sincronizarBotoesPopup(jogoSelecionado.id);
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [showPopup, jogoSelecionado]);
+  const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
+    queryKey: ["jogos"],
+    queryFn: async () => {
+      const response = await api.get("pedidos/list");
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-  useEffect(() => {
-    api
-      .get("pedidos/list", { withCredentials: true })
-      .then((res) => {
-        const listaValida = Array.isArray(res.data) ? res.data : [];
-        setJogos(listaValida);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar jogos", err);
-        setJogos([]);
-      })
-      .finally(() => setCarregando(false));
-  }, []);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!carregando && jogos.length > 0 && location.state?.abrirJogoId) {
-      const jogoParaAbrir = jogos.find(
-        (j) => j.id === location.state.abrirJogoId,
+const handleVinculo = async (
+  plataforma: string,
+  sub: string | null,
+) => {
+  if (!jogoSelecionado) return;
+
+  const jogoAtualizado = jogos.find(
+    (j) => j.id === jogoSelecionado.id,
+  );
+
+  const plataformasAtuais =
+    jogoAtualizado?.detalhes_plataformas || [];
+
+  const jaExiste = plataformasAtuais.some(
+    (p) =>
+      p.plataforma === plataforma &&
+      p.subcategoria === sub,
+  );
+  try {
+    if (jaExiste) {
+      await desvincularJogo(
+        jogoSelecionado.id,
+        plataforma,
+        sub,
       );
-
-      if (jogoParaAbrir) {
-        setTimeout(() => {
-          setJogoSelecionado(jogoParaAbrir);
-          setShowPopup(true);
-
-          window.history.replaceState({}, document.title);
-        }, 0);
-      }
+    } else {
+      await vincularJogo({
+        jogo_id: jogoSelecionado.id,
+        plataforma,
+        subcategoria: sub,
+      });
     }
-  }, [carregando, jogos, location.state]);
 
-  const handleVinculo = async (
-    e: React.MouseEvent<HTMLButtonElement>,
-    plataforma: string,
-    sub: string | null,
-  ) => {
-    if (!jogoSelecionado) return;
+    queryClient.setQueryData<Jogo[]>(["jogos"], (prev = []) =>
+      prev.map((jogo) => {
+        if (jogo.id !== jogoSelecionado.id) return jogo;
 
-    await gerenciarVinculo(
-      e.currentTarget,
-      jogoSelecionado.id,
-      plataforma,
-      sub,
-    );
+        const plataformas =
+          jogo.detalhes_plataformas || [];
 
-    setJogos((jogosAtuais) =>
-      jogosAtuais.map((j) => {
-        if (j.id === jogoSelecionado.id) {
-          const plataformasAtuais = j.detalhes_plataformas || [];
-          const jaExiste = plataformasAtuais.some(
-            (p) => p.plataforma === plataforma && p.subcategoria === sub,
-          );
-
-          return {
-            ...j,
-            detalhes_plataformas: jaExiste
-              ? plataformasAtuais.filter(
-                  (p) =>
-                    !(p.plataforma === plataforma && p.subcategoria === sub),
-                )
-              : [
-                  ...plataformasAtuais,
-                  { plataforma: plataforma, subcategoria: sub },
-                ],
-          };
-        }
-        return j;
+        return {
+          ...jogo,
+          detalhes_plataformas: jaExiste
+            ? plataformas.filter(
+                (p) =>
+                  !(
+                    p.plataforma === plataforma &&
+                    p.subcategoria === sub
+                  ),
+              )
+            : [
+                ...plataformas,
+                {
+                  plataforma,
+                  subcategoria: sub,
+                },
+              ],
+        };
       }),
     );
 
-    setTimeout(() => {
-      sincronizarBotoesPopup(jogoSelecionado.id);
-    }, 50);
-  };
+    setJogoSelecionado((prev) => {
+      if (!prev) return prev;
+
+      const plataformas =
+        prev.detalhes_plataformas || [];
+
+      return {
+        ...prev,
+        detalhes_plataformas: jaExiste
+          ? plataformas.filter(
+              (p) =>
+                !(
+                  p.plataforma === plataforma &&
+                  p.subcategoria === sub
+                ),
+            )
+          : [
+              ...plataformas,
+              {
+                plataforma,
+                subcategoria: sub,
+              },
+            ],
+      };
+    });
+  } catch (err) {
+    alert(tratarErroApi(err));
+  }
+};
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -153,6 +171,12 @@ const Jogos = () => {
     },
   };
 
+  const jogosFiltrados = useMemo(() => {
+    return jogos.filter((jogo) =>
+      jogo.nome.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [jogos, searchQuery]);
+
   const getPlatformClass = (p: {
     plataforma: string;
     subcategoria: string | null;
@@ -169,29 +193,65 @@ const Jogos = () => {
     }
     return "";
   };
-useEffect(() => {
-  const abrirModalComJogo = (id: number) => {
-    const jogoEncontrado = jogos.find((j) => Number(j.id) === Number(id));
-    if (jogoEncontrado) {
-      setJogoSelecionado(jogoEncontrado); 
-      setShowPopup(true); 
-    }
-  };
+  useEffect(() => {
+    const abrirModalComJogo = (id: number) => {
+      const jogoEncontrado = jogos.find(
+        (jogo) => Number(jogo.id) === Number(id),
+      );
+      if (jogoEncontrado) {
+        setJogoSelecionado(jogoEncontrado);
+        setShowPopup(true);
+      }
+    };
+    const handleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<number>;
 
+      if (customEvent.detail) {
+        abrirModalComJogo(customEvent.detail);
+      }
+    };
 
-const handleEvent = (e: Event) => {
-    const customEvent = e as CustomEvent; 
-    if (customEvent.detail) {
-      abrirModalComJogo(customEvent.detail);
+    window.addEventListener("abrirJogo", handleEvent);
+
+    if (location.state?.abrirJogoId) {
+      abrirModalComJogo(location.state.abrirJogoId);
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
     }
-  };
-  window.addEventListener("abrirJogo", handleEvent);
-  if (location.state?.abrirJogoId) {
-    abrirModalComJogo(location.state.abrirJogoId);
-    window.history.replaceState({}, document.title);
-  }
-  return () => window.removeEventListener("abrirJogo", handleEvent);
-}, [jogos, location.state]);
+    return () => {
+      window.removeEventListener("abrirJogo", handleEvent);
+    };
+  }, [jogos, location.state, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (showPopup) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showPopup]);
+
+const jogoTemPlataforma = (
+  plataforma: string,
+  sub: string | null,
+) => {
+  return jogoSelecionado?.detalhes_plataformas?.some(
+    (p) =>
+      p.plataforma === plataforma &&
+      p.subcategoria === sub,
+  );
+};
+
+  useEffect(() => {
+    document.title = "Jogos";
+}, []);
   return (
     <>
       <div className="biblioteca-container">
@@ -214,7 +274,7 @@ const handleEvent = (e: Event) => {
               initial="hidden"
               animate="visible"
             >
-              {jogos.map((jogo) => (
+              {jogosFiltrados.map((jogo) => (
                 <motion.div
                   layout
                   key={jogo.id}
@@ -231,7 +291,6 @@ const handleEvent = (e: Event) => {
                   onClick={() => {
                     setJogoSelecionado(jogo);
                     setShowPopup(true);
-                    sincronizarBotoesPopup(jogo.id);
                   }}
                 >
                   <img
@@ -302,16 +361,18 @@ const handleEvent = (e: Event) => {
                   <h4>Vincular ao Console</h4>
                   <div className="btn-row">
                     <button
-                      className="btn-platform-choice btn-ps"
-                      data-plataforma="PS5"
-                      onClick={(e) => handleVinculo(e, "PS5", null)}
+                      className={`btn-platform-choice btn-ps ${
+                        jogoTemPlataforma("PS5", null) ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("PS5", null)}
                     >
                       <FaPlaystation /> PlayStation
                     </button>
                     <button
-                      className="btn-platform-choice btn-xbox"
-                      data-plataforma="XBOX"
-                      onClick={(e) => handleVinculo(e, "XBOX", null)}
+                      className={`btn-platform-choice btn-xbox ${
+                        jogoTemPlataforma("XBOX", null) ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("XBOX", null)}
                     >
                       <FaXbox /> Xbox
                     </button>
@@ -320,18 +381,18 @@ const handleEvent = (e: Event) => {
                   <h4>Vincular ao PC</h4>
                   <div className="btn-row">
                     <button
-                      className="btn-platform-choice btn-epic"
-                      data-plataforma="PC"
-                      data-sub="Epic"
-                      onClick={(e) => handleVinculo(e, "PC", "Epic")}
+                      className={`btn-platform-choice btn-epic ${
+                        jogoTemPlataforma("PC", "Epic") ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("PC", "Epic")}
                     >
                       <SiEpicgames /> Epic Games
                     </button>
                     <button
-                      className="btn-platform-choice btn-steam"
-                      data-plataforma="PC"
-                      data-sub="Steam"
-                      onClick={(e) => handleVinculo(e, "PC", "Steam")}
+                      className={`btn-platform-choice btn-steam ${
+                        jogoTemPlataforma("PC", "Steam") ? "active" : ""
+                      }`}
+                      onClick={() => handleVinculo("PC", "Steam")}
                     >
                       <FaSteam /> Steam
                     </button>
