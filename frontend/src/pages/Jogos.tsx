@@ -40,7 +40,8 @@ const Jogos = () => {
       const response = await api.get("pedidos/list");
       return response.data;
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30, // Reduzido de 5min para 30s
+    gcTime: 1000 * 60 * 5, // Limpar cache após 5min se não usado
   });
 
   const queryClient = useQueryClient();
@@ -55,7 +56,12 @@ const handleVinculo = async (
     (j) => j.id === jogoSelecionado.id,
   );
  if (!estaAutenticado()) {
-    navigate("/login", { state: { from: location.pathname } });
+    navigate("/login", { 
+      state: { 
+        from: location.pathname,
+        abrirJogoId: jogoSelecionado.id 
+      } 
+    });
     return;
   }
   const plataformasAtuais =
@@ -134,6 +140,8 @@ const handleVinculo = async (
             ],
       };
     });
+
+    await queryClient.invalidateQueries({ queryKey: ["jogos"] });
   } catch (err) {
     alert(tratarErroApi(err));
   }
@@ -144,7 +152,7 @@ const handleVinculo = async (
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
+        staggerChildren: 0.02, 
       },
     },
   };
@@ -302,6 +310,8 @@ const jogoTemPlataforma = (
                     src={jogo.capa_url}
                     className="capa-principal"
                     alt={jogo.nome}
+                    loading="lazy"
+                    decoding="async"
                   />
 
                   <div className="plataformas-sutis-grid">
@@ -349,6 +359,8 @@ const jogoTemPlataforma = (
                   src={jogoSelecionado.capa_url}
                   className="img-main"
                   alt={jogoSelecionado.nome}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="gradient-overlay"></div>
               </div>

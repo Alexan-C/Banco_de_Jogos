@@ -12,6 +12,10 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 )
 
+# Configurar origens CORS dinamicamente
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+CORS_ORIGINS = [origin.strip() for origin in CORS_ORIGINS]
+
 app = FastAPI()
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated ="auto")
@@ -26,8 +30,7 @@ app.include_router(order_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Libera para todos os links da Vercel
-    # allow_origins = ["http://localhost:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

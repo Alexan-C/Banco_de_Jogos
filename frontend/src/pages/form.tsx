@@ -4,6 +4,7 @@ import { Mail, Eye, EyeOff, User } from 'lucide-react';
 import api from '../services/api';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 
 
@@ -15,6 +16,12 @@ export function Login(){
     const[senha, setSenha] = useState ('');
     const [modoLogin, setmodoLogin] = useState(true);
     const [mostrarSenha, setMostrarSenha] = useState<boolean>(false)
+    
+    // Recuperar rota anterior e jogoId
+    const navigate = useNavigate();
+    const location = useLocation();
+    const rotaAnterior = location.state?.from || "/jogos";
+    const abrirJogoId = location.state?.abrirJogoId;
 
     
     const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) =>{
@@ -46,8 +53,12 @@ export function Login(){
                 // verifica se é admin
                 localStorage.setItem('user_admin', String(response.data.admin));
                 localStorage.setItem('nome', String(response.data.nome))
-                window.location.href = '/'
-                // volta ao início
+                
+                // Redirecionar inteligentemente com state preservado
+                navigate(rotaAnterior, { 
+                  replace: true, 
+                  state: { abrirJogoId } 
+                });
             } else {
                 if (!modoLogin){
                     setmodoLogin(true);
