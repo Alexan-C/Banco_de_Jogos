@@ -1,7 +1,15 @@
 from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, event
 from sqlalchemy.orm import declarative_base, relationship
+import os
 
-db = create_engine("sqlite:///banco.db", echo=True)
+# Obter DATABASE_URL da variável de ambiente ou usar SQLite como fallback
+database_url = os.getenv("DATABASE_URL", "sqlite:///banco.db")
+
+# Compatibilidade: converter postgres:// para postgresql:// (requerido pelo SQLAlchemy)
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+db = create_engine(database_url, echo=True)
 
 Base = declarative_base()
 

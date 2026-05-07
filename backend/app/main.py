@@ -35,3 +35,4 @@ app.add_middleware(
 # uvicorn app.main:app --reload
 # alembic revision --autogenerate -m ""
 # alembic upgrade head
+# python run_seed.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
