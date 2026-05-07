@@ -25,7 +25,11 @@ app.include_router(order_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], 
+    allow_origins=[
+        "http://localhost:5173",
+        "https://banco-de-jogos.vercel.app",
+        "https://banco-de-jogos-1olzybif6-alexan-cs-projects.vercel.app" # Link do seu print de erro
+    ], 
     allow_credentials=True,
     allow_methods=["*"], 
     allow_headers=["*"], 
