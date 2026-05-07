@@ -31,7 +31,9 @@ const Jogos = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { searchQuery } = useOutletContext<{ searchQuery: string }>();
-
+  const estaAutenticado = () => {
+  return !!localStorage.getItem("token"); 
+    };
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
     queryKey: ["jogos"],
     queryFn: async () => {
@@ -52,7 +54,10 @@ const handleVinculo = async (
   const jogoAtualizado = jogos.find(
     (j) => j.id === jogoSelecionado.id,
   );
-
+ if (!estaAutenticado()) {
+    navigate("/login", { state: { from: location.pathname } });
+    return;
+  }
   const plataformasAtuais =
     jogoAtualizado?.detalhes_plataformas || [];
 
