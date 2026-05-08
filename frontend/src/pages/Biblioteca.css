@@ -390,3 +390,169 @@
     transform: translateY(0);
   }
 }
+
+/* ========================================
+   MOBILE - GRID OTIMIZADO (até 768px)
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* CONTAINER */
+  .biblioteca-container {
+    padding: 10px;
+    min-height: auto;
+    overflow-x: hidden;
+  }
+
+  /* GRID - 2 COLUNAS MOBILE */
+  .jogos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 10px;
+    perspective: none;
+    overflow-x: hidden;
+  }
+
+  /* CARDS MOBILE */
+  .card-jogo-minimalista {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 8px;
+    background-color: #1a1825;
+    overflow: hidden;
+    border: 1px solid rgba(125, 96, 190, 0.1);
+    
+    /* Touch feedback */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .card-jogo-minimalista img,
+  .capa-principal {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  /* Remove hover effect em mobile (usar active/touch) */
+  .card-jogo-minimalista:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(125, 96, 190, 0.1);
+  }
+
+  .card-jogo-minimalista:hover img,
+  .card-jogo-minimalista:hover .capa-principal {
+    transform: none;
+  }
+
+  /* Touch feedback */
+  .card-jogo-minimalista:active {
+    transform: scale(0.98);
+  }
+
+  .card-jogo-minimalista:active .capa-principal {
+    transform: scale(1.05);
+  }
+
+  /* OVERLAY - Esconder em mobile */
+  .card-overlay-minimalista {
+    display: none;
+  }
+
+  /* Esconder ícones de plataforma em mobile */
+  .plataformas-sutis-grid {
+    display: none;
+  }
+
+  /* POPUP MOBILE */
+  .popup-overlay {
+    padding: 10px;
+  }
+
+  .popup-content {
+    width: 95vw;
+    max-width: 100%;
+    height: auto;
+    max-height: 95vh;
+    flex-direction: column;
+    border-radius: 12px;
+  }
+
+  .popup-left {
+    flex: 1;
+    min-height: 200px;
+    overflow: hidden;
+  }
+
+  .popup-left img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+
+  .popup-right {
+    flex: 1;
+    padding: 15px;
+    gap: 10px;
+  }
+
+  .popup-title {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+
+  /* Botões Mobile - Touch friendly */
+  .btn-platform-choice {
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    min-height: 44px;
+    
+    gap: 8px;
+  }
+
+  .btn-platform-choice svg {
+    font-size: 1.2rem;
+  }
+
+  .btn-row {
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .platform-group {
+    margin-top: 15px;
+  }
+
+  .platform-group h4 {
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+  }
+
+  /* Close button mobile */
+  .close-popup {
+    width: 36px;
+    height: 36px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+
+  /* Erro mobile */
+  .popup-erro {
+    top: 70px;
+    right: 10px;
+    left: auto;
+    font-size: 0.8rem;
+  }
+}
+

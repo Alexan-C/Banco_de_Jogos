@@ -101,95 +101,95 @@ export const MainLayout: React.FC = () => {
             <Gamepad2 size={28} className="logo-icon" />
             <span className="logo-text">GameVault</span>
           </div>
-
-          <div className="nav-tabs">
-            {tabs.map((tab) => {
-              if (tab === "Gerenciar" && !eAdmin) return null;
-
-              return (
-                <button
-                  key={tab}
-                  className={`nav-tab-item ${activeTab === tab ? "active" : ""}`}
-                  onClick={() => navigate(rotas[tab])}
-                >
-                  {tab}
-                  {activeTab === tab && <div className="active-indicator" />}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
-        <div
-          className={`search-container-nav ${mostrarBusca ? "visible" : ""}`}
-        >
-          {mostrarBusca && (
-            <div className="search-input-wrapper">
-              <Search className="search-icon" size={18} />
-              <input
-                type="text"
-                placeholder={`Buscar em ${activeTab}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <div className="nav-tabs">
+          {tabs.map((tab) => {
+            if (tab === "Gerenciar" && !eAdmin) return null;
 
-              {searchQuery && (
-                <div className="search-results-dropdown">
-                  {jogosFiltrados.length > 0 ? (
-                    jogosFiltrados.map((jogo) => (
-                      <div
-                        key={jogo.id}
-                        className="search-result-item"
-                        onClick={() => {
-                          const jogoId = jogo.id;
-                          const noCaminhoCerto =
-                            location.pathname === "/minha_biblioteca" ||
-                            location.pathname === "/jogos";
-
-                          if (noCaminhoCerto) {
-                            window.dispatchEvent(
-                              new CustomEvent("abrirJogo", { detail: jogoId }),
-                            );
-                          } else {
-                            navigate("/minha_biblioteca", {
-                              state: { abrirJogoId: jogoId },
-                            });
-                          }
-
-                          setSearchQuery("");
-                        }}
-                      >
-                        <img
-                          src={jogo.capa_url}
-                          alt={jogo.nome}
-                          className="result-img"
-                        />
-                        <div className="result-info">
-                          <span className="result-name">{jogo.nome}</span>
-                          <span className="result-category">
-                            {jogo.categoria || "Digital Game"}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="no-results">Nenhum jogo encontrado</div>
-                  )}
-                </div>
-              )}
-
-              {searchQuery && (
-                <X
-                  className="clear-search"
-                  size={16}
-                  onClick={() => setSearchQuery("")}
-                />
-              )}
-            </div>
-          )}
+            return (
+              <button
+                key={tab}
+                className={`nav-tab-item ${activeTab === tab ? "active" : ""}`}
+                onClick={() => navigate(rotas[tab])}
+              >
+                {tab}
+                {activeTab === tab && <div className="active-indicator" />}
+              </button>
+            );
+          })}
         </div>
 
         <div className="profile-section">
+          <div
+            className={`search-container-nav ${mostrarBusca ? "visible" : ""}`}
+          >
+            {mostrarBusca && (
+              <div className="search-input-wrapper">
+                <Search className="search-icon" size={18} />
+                <input
+                  type="text"
+                  placeholder={`Buscar em ${activeTab}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+
+                {searchQuery && (
+                  <div className="search-results-dropdown">
+                    {jogosFiltrados.length > 0 ? (
+                      jogosFiltrados.map((jogo) => (
+                        <div
+                          key={jogo.id}
+                          className="search-result-item"
+                          onClick={() => {
+                            const jogoId = jogo.id;
+                            const noCaminhoCerto =
+                              location.pathname === "/minha_biblioteca" ||
+                              location.pathname === "/jogos";
+
+                            if (noCaminhoCerto) {
+                              window.dispatchEvent(
+                                new CustomEvent("abrirJogo", { detail: jogoId }),
+                              );
+                            } else {
+                              navigate("/minha_biblioteca", {
+                                state: { abrirJogoId: jogoId },
+                              });
+                            }
+
+                            setSearchQuery("");
+                          }}
+                        >
+                          <img
+                            src={jogo.capa_url}
+                            alt={jogo.nome}
+                            className="result-img"
+                          />
+                          <div className="result-info">
+                            <span className="result-name">{jogo.nome}</span>
+                            <span className="result-category">
+                              {jogo.categoria || "Digital Game"}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-results">Nenhum jogo encontrado</div>
+                    )}
+                  </div>
+                )}
+
+                {searchQuery && (
+                  <X
+                    className="clear-search"
+                    size={16}
+                    onClick={() => setSearchQuery("")}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
           {estaLogado ? (
             <>
               <div className="user-info">

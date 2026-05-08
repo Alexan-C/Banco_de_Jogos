@@ -9,7 +9,7 @@
   height: 72px;
   padding: 0 40px;
   display: flex;
-  grid-template-columns: auto 1fr auto;
+  position: relative;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -19,21 +19,21 @@
   z-index: 50;
 }
 
-/* 1. SEÇÃO ESQUERDA: LOGO E TABS */
+/* 1. SEÇÃO ESQUERDA: LOGO */
 .nav-left-section {
+  flex: 1;
   height: 100%;
   display: flex;
   align-items: center;
   z-index: 10;
-  justify-self: center;
-  gap: 40px;
 }
 
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .logo-icon {
@@ -44,18 +44,27 @@
 .logo-text {
   font-size: 1.4rem;
   font-weight: 800;
-  color: white;
+  color: #7b61ff;
   letter-spacing: -0.5px;
 }
 
+.nav-logo:hover .logo-icon {
+  color: #ffffff;
+  transform: scale(1.1); 
+}
+.nav-logo:hover .logo-text {
+  color: #ffffff;
+  filter: drop-shadow(0 0 8px rgba(123, 97, 255, 0.5));
+}
+
 .nav-tabs {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 30px;
   height: 100%;
+  flex: 0 0 auto;
 }
 .nav-tab-item {
   position: relative;
@@ -105,11 +114,13 @@
 
 /* 2. SEÇÃO CENTRAL: BUSCA */
 .search-container-nav {
-  position: absolute;
-  right: 240px; /* Aumentado para não atropelar o nome Admin */
+  position: relative;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
+  flex: 0 1 250px;
+  display: flex;
+  align-items: flex-end;
 }
 .search-container-nav.visible {
   opacity: 1;
@@ -147,7 +158,7 @@
 .search-results-dropdown {
   position: absolute;
   top: calc(100% + 10px);
-  left: -150px;
+  right: 0;
   width: 500px;
   background: linear-gradient(135deg, #1a1926 0%, #0f0c14 100%);
   border: 1px solid rgba(123, 97, 255, 0.3);
@@ -254,15 +265,17 @@
   font-size: 0.9rem;
 }
 
-/* 3. SEÇÃO DIREITA: PERFIL */
+/* 3. SEÇÃO DIREITA: BUSCA + PERFIL */
 .profile-section {
-  position: absolute;
-  right: 40px;
+  flex: 1;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: flex-end;
+  gap: 20px;
   height: 100%;
   z-index: 10;
+  flex-wrap: nowrap;
 }
 .user-name {
   color: white;
@@ -305,8 +318,8 @@
 
 .crown-icon-admin {
   position: absolute;
-  top: -12px;
-  left: 10px;
+  top: -13px;
+  left: 9.9px;
   filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
   animation: bounce 2s infinite ease-in-out;
 }
@@ -435,3 +448,55 @@
   transform: rotate(180deg);
 }
 
+@media (max-width: 768px) {
+  .navbar-main {
+    height: 64px; /* Levemente maior para conforto do toque */
+    padding: 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px; /* Impede colisão entre logo, menu e perfil */
+  }
+
+  /* 1. TABS - Removido o absolute para liberar o clique */
+  .nav-tabs {
+    position: static; 
+    transform: none;
+    flex: 1; /* Ocupa o espaço dinamicamente entre logo e avatar */
+    height: 100%;
+    
+    /* Scroll Horizontal Nativo e Suave */
+    display: flex;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory; /* Ajuda a parar no botão certinho */
+    scrollbar-width: none; /* Esconde barra no Firefox */
+    z-index: 60;
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none; /* Esconde barra no Chrome/Safari */
+  }
+
+  .nav-tab-item {
+    scroll-snap-align: start;
+    padding: 0 16px;
+    font-size: 0.85rem; 
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    touch-action: manipulation; 
+  }
+
+  .profile-section {
+    position: relative;
+    z-index: 70; 
+  }
+  
+  .nav-left-section {
+    z-index: 70;
+  }
+}
