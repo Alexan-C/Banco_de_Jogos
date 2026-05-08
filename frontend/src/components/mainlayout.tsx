@@ -69,11 +69,7 @@ export const MainLayout: React.FC = () => {
     const buscarJogos = async () => {
       try {
         const response = await api.get("/pedidos/list");
-        console.log(" Jogos carregados:", response.data);
-        console.log("Total de jogos:", response.data?.length || 0);
-        if (response.data && response.data.length > 0) {
-          console.log("Primeiro jogo:", response.data[0]);
-        }
+        if (response.data && response.data.length > 0) 
         setTodosOsJogos(response.data);
       } catch (error) {
         console.error("Erro ao buscar lista de jogos:", error);
