@@ -1,5 +1,9 @@
 import axios from "axios";
 import api from "./api";
+import {QueryClient } from "@tanstack/react-query";
+
+const queryClient = new QueryClient()
+
 
 interface VinculoPayLoad{
     jogo_id: number;
@@ -20,6 +24,9 @@ export async function vincularJogo({
         plataforma,
         subcategoria: subClean,
     });
+    queryClient.setQueryData<VinculoPayLoad[]>(["biblioteca"], (antigos = []) => {
+    return [data, ...antigos];
+  })
     return data
 } 
 export async function desvincularJogo(
@@ -37,10 +44,15 @@ export async function desvincularJogo(
     {
       params: {
         plataforma,
-        ...(subClean && { subcategoria: subClean }),
+        ...(subClean !== null && {
+          subcategoria: subClean
+        }),
       },
     },
   );
+  queryClient.setQueryData<VinculoPayLoad[]>(["biblioteca"], (antigos = []) => {
+    return antigos.filter((jogo) => jogo.jogo_id !== jogoId);
+  });
 
   return data;
 }
