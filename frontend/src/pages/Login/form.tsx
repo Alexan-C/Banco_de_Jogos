@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import "./form.css"
 import { Mail, Eye, EyeOff, User } from 'lucide-react';
-import api from '../services/api';
+import api from '../../services/api';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';

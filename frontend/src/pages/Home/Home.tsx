@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import api from "../services/api";
+import api from "../../services/api";
 import "./Home.css";
 
 interface Jogo {

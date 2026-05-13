@@ -1,15 +1,19 @@
-import "../pages/Jogos.css";
+import "../pages/Biblioteca.css";
 import { useEffect, useState, useMemo } from "react";
-import api from "../services/api";
+import api from "../../services/api";
 import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
 import { SiEpicgames } from "react-icons/si";
-import {desvincularJogo,vincularJogo,tratarErroApi} from "../services/vinculo";
+import {
+  desvincularJogo,
+  vincularJogo,
+  tratarErroApi,
+} from "../../services/vinculo";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { SearchBar } from "../components/SearchBar";
+import { SearchBar } from "../../components/Pesquisar/SearchBar";
 
 interface Jogo {
   id: number;
@@ -24,8 +28,8 @@ interface Jogo {
     subcategoria: string | null;
   }>;
 }
-
-const Jogos = () => {
+const Biblioteca = () => {
+  const [erroBusca, setErroBusca] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,17 +39,18 @@ const Jogos = () => {
   const estaAutenticado = () => {
   return !!localStorage.getItem("token"); 
     };
+
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
-    queryKey: ["jogos"],
+    queryKey: ["biblioteca"],
     queryFn: async () => {
-      const response = await api.get("pedidos/list");
+      const response = await api.get("pedidos/minha_biblioteca");
       return response.data;
     },
-    staleTime: 1000 * 30, // Reduzido de 5min para 30s
-    gcTime: 1000 * 60 * 5, // Limpar cache após 5min se não usado
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 5,
   });
 
-  const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
 
 const atualizarPlataformas = (
   plataformas: Array<{
@@ -212,40 +217,29 @@ const handleVinculo = (
 };
 
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.02, 
-      },
-    },
-  };
-
-  const cardVariants: Variants = {
+  const cardMesaVariants: Variants = {
     hidden: {
       opacity: 0,
-      y: 15,
-      scale: 0.98,
+      y: -50,
+      rotateX: 15,
+      scale: 1.1,
     },
     visible: {
       opacity: 1,
       y: 0,
+      rotateX: 0,
       scale: 1,
       transition: {
         type: "spring",
-        stiffness: 450,
-        damping: 30,
-        mass: 0.3,
+        stiffness: 260,
+        damping: 20,
       },
     },
     exit: {
       opacity: 0,
-      scale: 0.95,
-      transition: {
-        duration: 0.15,
-        ease: "easeOut",
-      },
+      scale: 0.9,
+      y: 20,
+      transition: { duration: 0.2 },
     },
   };
 
@@ -271,11 +265,10 @@ const handleVinculo = (
     }
     return "";
   };
+
   useEffect(() => {
     const abrirModalComJogo = (id: number) => {
-      const jogoEncontrado = jogos.find(
-        (jogo) => Number(jogo.id) === Number(id),
-      );
+      const jogoEncontrado = jogos.find((jogo) => jogo.id === id);
       if (jogoEncontrado) {
         setJogoSelecionado(jogoEncontrado);
         setShowPopup(true);
@@ -316,28 +309,54 @@ const handleVinculo = (
     };
   }, [showPopup]);
 
-const jogoTemPlataforma = (
-  plataforma: string,
-  sub: string | null,
-) => {
-  return jogoSelecionado?.detalhes_plataformas?.some(
-    (p) =>
-      p.plataforma === plataforma &&
-      p.subcategoria === sub,
-  );
-};
+  const jogoTemPlataforma = (plataforma: string, sub: string | null) => {
+    return jogoSelecionado?.detalhes_plataformas?.some(
+      (p) => p.plataforma === plataforma && p.subcategoria === sub,
+    );
+  };
 
   useEffect(() => {
-    document.title = "Jogos";
+    const handleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<number>;
+
+      if (!customEvent.detail) return;
+
+      const jogoEncontrado = jogos.find(
+        (j) => j.id === Number(customEvent.detail),
+      );
+
+      if (jogoEncontrado) {
+        setJogoSelecionado(jogoEncontrado);
+        setShowPopup(true);
+        setErroBusca(null);
+      } else {
+        setErroBusca("Você não vinculou esse jogo");
+
+        setTimeout(() => {
+          setErroBusca(null);
+        }, 3000);
+      }
+    };
+
+    window.addEventListener("abrirJogo", handleEvent);
+
+    return () => {
+      window.removeEventListener("abrirJogo", handleEvent);
+    };
+  }, [jogos]);
+
+    useEffect(() => {
+    document.title = "Biblioteca";
 }, []);
   return (
     <>
+      {erroBusca && <div className="popup-erro">{erroBusca}</div>}
       <div className="biblioteca-container">
         <SearchBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           jogos={jogos}
-          placeholder="Buscar em Jogos..."
+          placeholder="Buscar em Biblioteca..."
           onResultClick={(jogoId) => {
             const jogoEncontrado = jogos.find((j) => j.id === jogoId);
             if (jogoEncontrado) {
@@ -347,38 +366,29 @@ const jogoTemPlataforma = (
           }}
           showResults={true}
         />
-        <AnimatePresence mode="wait">
-          {carregando ? (
-            <motion.div
-              key="loader"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{ textAlign: "center", color: "#888", marginTop: "50px" }}
-            >
-              <p>Carregando Jogos...</p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="grid"
-              className="jogos-grid"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
+        {carregando ? (
+          <div
+            style={{ textAlign: "center", color: "#888", marginTop: "50px" }}
+          >
+            <p>Carregando Jogos...</p>
+          </div>
+        ) : (
+          <div className="jogos-grid">
+            <AnimatePresence mode="popLayout">
               {jogosFiltrados.map((jogo) => (
                 <motion.div
                   layout
                   key={jogo.id}
-                  variants={cardVariants}
+                  variants={cardMesaVariants}
                   initial="hidden"
                   animate="visible"
                   exit="exit"
                   whileHover={{
-                    y: -10,
-                    transition: { duration: 0.2 },
+                    y: -5,
+                    rotateX: 0,
+                    transition: { duration: 0.1 },
                   }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.98 }}
                   className="card-jogo-minimalista"
                   onClick={() => {
                     setJogoSelecionado(jogo);
@@ -389,8 +399,6 @@ const jogoTemPlataforma = (
                     src={jogo.capa_url}
                     className="capa-principal"
                     alt={jogo.nome}
-                    loading="lazy"
-                    decoding="async"
                   />
 
                   <div className="plataformas-sutis-grid">
@@ -402,7 +410,7 @@ const jogoTemPlataforma = (
                         {p.plataforma === "PS5" && <FaPlaystation />}
                         {p.plataforma === "XBOX" && <FaXbox />}
                         {p.plataforma === "PC" &&
-                          (p.subcategoria?.toLowerCase() === "steam" ? (
+                          (p.subcategoria === "Steam" ? (
                             <FaSteam />
                           ) : (
                             <SiEpicgames />
@@ -416,9 +424,9 @@ const jogoTemPlataforma = (
                   </div>
                 </motion.div>
               ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {showPopup &&
@@ -438,8 +446,6 @@ const jogoTemPlataforma = (
                   src={jogoSelecionado.capa_url}
                   className="img-main"
                   alt={jogoSelecionado.nome}
-                  loading="lazy"
-                  decoding="async"
                 />
                 <div className="gradient-overlay"></div>
               </div>
@@ -502,4 +508,4 @@ const jogoTemPlataforma = (
     </>
   );
 };
-export default Jogos;
+export default Biblioteca;

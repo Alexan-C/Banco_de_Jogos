@@ -1,19 +1,15 @@
-import "../pages/Biblioteca.css";
+import "../pages/Jogos.css";
 import { useEffect, useState, useMemo } from "react";
-import api from "../services/api";
+import api from "../../services/api";
 import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
 import { SiEpicgames } from "react-icons/si";
-import {
-  desvincularJogo,
-  vincularJogo,
-  tratarErroApi,
-} from "../services/vinculo";
+import {desvincularJogo,vincularJogo,tratarErroApi} from "../../services/vinculo";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { SearchBar } from "../components/SearchBar";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { SearchBar } from "../../components/Pesquisar/SearchBar";
 
 interface Jogo {
   id: number;
@@ -28,111 +24,228 @@ interface Jogo {
     subcategoria: string | null;
   }>;
 }
-const Biblioteca = () => {
-  const [erroBusca, setErroBusca] = useState<string | null>(null);
+
+const Jogos = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
-
+  const estaAutenticado = () => {
+  return !!localStorage.getItem("token"); 
+    };
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
-    queryKey: ["biblioteca"],
+    queryKey: ["jogos"],
     queryFn: async () => {
-      const response = await api.get("pedidos/minha_biblioteca");
+      const response = await api.get("pedidos/list");
       return response.data;
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30, // Reduzido de 5min para 30s
+    gcTime: 1000 * 60 * 5, // Limpar cache após 5min se não usado
   });
 
   const queryClient = useQueryClient();
 
-  const handleVinculo = async (plataforma: string, sub: string | null) => {
-    if (!jogoSelecionado) return;
+const atualizarPlataformas = (
+  plataformas: Array<{
+    plataforma: string;
+    subcategoria: string | null;
+  }>,
+  plataforma: string,
+  sub: string | null,
+  remover: boolean,
+) => {
+  if (remover) {
+    return plataformas.filter(
+      (p) =>
+        !(
+          p.plataforma === plataforma &&
+          p.subcategoria === sub
+        ),
+    );
+  }
 
-    const jaExiste = jogoSelecionado.detalhes_plataformas?.some(
-      (p) => p.plataforma === plataforma && p.subcategoria === sub,
+  return [
+    ...plataformas,
+    {
+      plataforma,
+      subcategoria: sub,
+    },
+  ];
+};
+
+const vinculoMutation = useMutation({
+  mutationFn: async ({
+    jogoId,
+    plataforma,
+    sub,
+    jaExiste,
+  }: {
+    jogoId: number;
+    plataforma: string;
+    sub: string | null;
+    jaExiste: boolean;
+  }) => {
+
+    if (jaExiste) {
+      return await desvincularJogo(
+        jogoId,
+        plataforma,
+        sub,
+      );
+    }
+
+    return await vincularJogo({
+      jogo_id: jogoId,
+      plataforma,
+      subcategoria: sub,
+    });
+  },
+
+  // ===== UPDATE OTIMISTA =====
+  onMutate: async ({
+    jogoId,
+    plataforma,
+    sub,
+    jaExiste,
+  }) => {
+
+    await queryClient.cancelQueries({
+      queryKey: ["jogos"],
+    });
+
+    const cacheAnterior =
+      queryClient.getQueryData<Jogo[]>(["jogos"]);
+
+    queryClient.setQueryData<Jogo[]>(
+      ["jogos"],
+      (prev = []) =>
+        prev.map((jogo) => {
+          if (jogo.id !== jogoId) {
+            return jogo;
+          }
+
+          return {
+            ...jogo,
+            detalhes_plataformas:
+              atualizarPlataformas(
+                jogo.detalhes_plataformas || [],
+                plataforma,
+                sub,
+                jaExiste,
+              ),
+          };
+        }),
     );
 
-    try {
-      if (jaExiste) {
-        await desvincularJogo(jogoSelecionado.id, plataforma, sub);
-      } else {
-        await vincularJogo({
-          jogo_id: jogoSelecionado.id,
-          plataforma,
-          subcategoria: sub,
-        });
-      }
+    setJogoSelecionado((prev) => {
+      if (!prev) return prev;
 
-      // Atualiza o Cache Global
-      queryClient.setQueryData<Jogo[]>(["biblioteca"], (prev = []) => {
-        const novosJogos = prev.map((j) => {
-          if (j.id !== jogoSelecionado.id) return j;
-          const plataformas = j.detalhes_plataformas || [];
-          return {
-            ...j,
-            detalhes_plataformas: jaExiste
-              ? plataformas.filter(
-                  (p) =>
-                    !(p.plataforma === plataforma && p.subcategoria === sub),
-                )
-              : [...plataformas, { plataforma, subcategoria: sub }],
-          };
-        });
+      return {
+        ...prev,
+        detalhes_plataformas:
+          atualizarPlataformas(
+            prev.detalhes_plataformas || [],
+            plataforma,
+            sub,
+            jaExiste,
+          ),
+      };
+    });
 
-        // Se removeu a última plataforma, remove o jogo da lista
-        if (jaExiste && jogoSelecionado.detalhes_plataformas?.length === 1) {
-          setShowPopup(false);
-          setJogoSelecionado(null);
-          return novosJogos.filter((j) => j.id !== jogoSelecionado.id);
-        }
+    return { cacheAnterior };
+  },
 
-        return novosJogos;
-      });
+  // ===== ROLLBACK =====
+  onError: (err, _, context) => {
 
-      // Atualiza o Modal local
-      setJogoSelecionado((prev) => {
-        if (!prev) return null;
-        const plataformas = prev.detalhes_plataformas || [];
-        return {
-          ...prev,
-          detalhes_plataformas: jaExiste
-            ? plataformas.filter(
-                (p) => !(p.plataforma === plataforma && p.subcategoria === sub),
-              )
-            : [...plataformas, { plataforma, subcategoria: sub }],
-        };
-      });
-    } catch (err) {
-      alert(tratarErroApi(err));
-    }
+    queryClient.setQueryData(
+      ["jogos"],
+      context?.cacheAnterior,
+    );
+
+    alert(tratarErroApi(err));
+  },
+
+  // ===== SINCRONIZA =====
+  onSettled: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["jogos"],
+    });
+  },
+});
+
+const handleVinculo = (
+  plataforma: string,
+  sub: string | null,
+) => {
+
+  if (!jogoSelecionado) return;
+
+  if (!estaAutenticado()) {
+    navigate("/login", {
+      state: {
+        from: location.pathname,
+        abrirJogoId: jogoSelecionado.id,
+      },
+    });
+
+    return;
+  }
+
+  const plataformasAtuais =
+    jogoSelecionado.detalhes_plataformas || [];
+
+  const jaExiste = plataformasAtuais.some(
+    (p) =>
+      p.plataforma === plataforma &&
+      p.subcategoria === sub,
+  );
+
+  vinculoMutation.mutate({
+    jogoId: jogoSelecionado.id,
+    plataforma,
+    sub,
+    jaExiste,
+  });
+};
+
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.02, 
+      },
+    },
   };
 
-  const cardMesaVariants: Variants = {
+  const cardVariants: Variants = {
     hidden: {
       opacity: 0,
-      y: -50,
-      rotateX: 15,
-      scale: 1.1,
+      y: 15,
+      scale: 0.98,
     },
     visible: {
       opacity: 1,
       y: 0,
-      rotateX: 0,
       scale: 1,
       transition: {
         type: "spring",
-        stiffness: 260,
-        damping: 20,
+        stiffness: 450,
+        damping: 30,
+        mass: 0.3,
       },
     },
     exit: {
       opacity: 0,
-      scale: 0.9,
-      y: 20,
-      transition: { duration: 0.2 },
+      scale: 0.95,
+      transition: {
+        duration: 0.15,
+        ease: "easeOut",
+      },
     },
   };
 
@@ -158,10 +271,11 @@ const Biblioteca = () => {
     }
     return "";
   };
-
   useEffect(() => {
     const abrirModalComJogo = (id: number) => {
-      const jogoEncontrado = jogos.find((jogo) => jogo.id === id);
+      const jogoEncontrado = jogos.find(
+        (jogo) => Number(jogo.id) === Number(id),
+      );
       if (jogoEncontrado) {
         setJogoSelecionado(jogoEncontrado);
         setShowPopup(true);
@@ -202,54 +316,28 @@ const Biblioteca = () => {
     };
   }, [showPopup]);
 
-  const jogoTemPlataforma = (plataforma: string, sub: string | null) => {
-    return jogoSelecionado?.detalhes_plataformas?.some(
-      (p) => p.plataforma === plataforma && p.subcategoria === sub,
-    );
-  };
+const jogoTemPlataforma = (
+  plataforma: string,
+  sub: string | null,
+) => {
+  return jogoSelecionado?.detalhes_plataformas?.some(
+    (p) =>
+      p.plataforma === plataforma &&
+      p.subcategoria === sub,
+  );
+};
 
   useEffect(() => {
-    const handleEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<number>;
-
-      if (!customEvent.detail) return;
-
-      const jogoEncontrado = jogos.find(
-        (j) => j.id === Number(customEvent.detail),
-      );
-
-      if (jogoEncontrado) {
-        setJogoSelecionado(jogoEncontrado);
-        setShowPopup(true);
-        setErroBusca(null);
-      } else {
-        setErroBusca("Você não vinculou esse jogo");
-
-        setTimeout(() => {
-          setErroBusca(null);
-        }, 3000);
-      }
-    };
-
-    window.addEventListener("abrirJogo", handleEvent);
-
-    return () => {
-      window.removeEventListener("abrirJogo", handleEvent);
-    };
-  }, [jogos]);
-
-    useEffect(() => {
-    document.title = "Biblioteca";
+    document.title = "Jogos";
 }, []);
   return (
     <>
-      {erroBusca && <div className="popup-erro">{erroBusca}</div>}
       <div className="biblioteca-container">
         <SearchBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           jogos={jogos}
-          placeholder="Buscar em Biblioteca..."
+          placeholder="Buscar em Jogos..."
           onResultClick={(jogoId) => {
             const jogoEncontrado = jogos.find((j) => j.id === jogoId);
             if (jogoEncontrado) {
@@ -259,29 +347,38 @@ const Biblioteca = () => {
           }}
           showResults={true}
         />
-        {carregando ? (
-          <div
-            style={{ textAlign: "center", color: "#888", marginTop: "50px" }}
-          >
-            <p>Carregando Jogos...</p>
-          </div>
-        ) : (
-          <div className="jogos-grid">
-            <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="wait">
+          {carregando ? (
+            <motion.div
+              key="loader"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ textAlign: "center", color: "#888", marginTop: "50px" }}
+            >
+              <p>Carregando Jogos...</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="grid"
+              className="jogos-grid"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               {jogosFiltrados.map((jogo) => (
                 <motion.div
                   layout
                   key={jogo.id}
-                  variants={cardMesaVariants}
+                  variants={cardVariants}
                   initial="hidden"
                   animate="visible"
                   exit="exit"
                   whileHover={{
-                    y: -5,
-                    rotateX: 0,
-                    transition: { duration: 0.1 },
+                    y: -10,
+                    transition: { duration: 0.2 },
                   }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.95 }}
                   className="card-jogo-minimalista"
                   onClick={() => {
                     setJogoSelecionado(jogo);
@@ -292,6 +389,8 @@ const Biblioteca = () => {
                     src={jogo.capa_url}
                     className="capa-principal"
                     alt={jogo.nome}
+                    loading="lazy"
+                    decoding="async"
                   />
 
                   <div className="plataformas-sutis-grid">
@@ -303,7 +402,7 @@ const Biblioteca = () => {
                         {p.plataforma === "PS5" && <FaPlaystation />}
                         {p.plataforma === "XBOX" && <FaXbox />}
                         {p.plataforma === "PC" &&
-                          (p.subcategoria === "Steam" ? (
+                          (p.subcategoria?.toLowerCase() === "steam" ? (
                             <FaSteam />
                           ) : (
                             <SiEpicgames />
@@ -317,9 +416,9 @@ const Biblioteca = () => {
                   </div>
                 </motion.div>
               ))}
-            </AnimatePresence>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {showPopup &&
@@ -339,6 +438,8 @@ const Biblioteca = () => {
                   src={jogoSelecionado.capa_url}
                   className="img-main"
                   alt={jogoSelecionado.nome}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="gradient-overlay"></div>
               </div>
@@ -401,4 +502,4 @@ const Biblioteca = () => {
     </>
   );
 };
-export default Biblioteca;
+export default Jogos;
