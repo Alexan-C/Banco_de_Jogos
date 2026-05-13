@@ -182,16 +182,34 @@ useEffect(() => {
                 </button>
               </div>
             </div>
+
+            {jogos.length > 1 && (
+              <div className="carousel-dots">
+                {jogos.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`dot ${index === indice ? "active" : ""}`}
+                    onClick={() => {
+                      if (!estaAnimando) {
+                        setEstaAnimando(true);
+                        setIndice(index);
+                      }
+                    }}
+                    disabled={estaAnimando}
+                    aria-label={`Ir para jogo ${index + 1}`}
+                  />
+                ))}
+              </div>
+              
+              
+            )}
           </motion.div>
         </AnimatePresence>
-
-        <button
+                <button
           className="nav-arrow right"
           onClick={proximoJogo}
           disabled={estaAnimando}
-        >
-          ›
-        </button>
+        > › </button>
       </main>
     </div>
   );

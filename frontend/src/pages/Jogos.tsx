@@ -5,10 +5,11 @@ import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
 import { SiEpicgames } from "react-icons/si";
 import {desvincularJogo,vincularJogo,tratarErroApi} from "../services/vinculo";
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SearchBar } from "../components/SearchBar";
 
 interface Jogo {
   id: number;
@@ -27,10 +28,10 @@ interface Jogo {
 const Jogos = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { searchQuery } = useOutletContext<{ searchQuery: string }>();
   const estaAutenticado = () => {
   return !!localStorage.getItem("token"); 
     };
@@ -268,6 +269,20 @@ const jogoTemPlataforma = (
   return (
     <>
       <div className="biblioteca-container">
+        <SearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          jogos={jogos}
+          placeholder="Buscar em Jogos..."
+          onResultClick={(jogoId) => {
+            const jogoEncontrado = jogos.find((j) => j.id === jogoId);
+            if (jogoEncontrado) {
+              setJogoSelecionado(jogoEncontrado);
+              setShowPopup(true);
+            }
+          }}
+          showResults={true}
+        />
         <AnimatePresence mode="wait">
           {carregando ? (
             <motion.div

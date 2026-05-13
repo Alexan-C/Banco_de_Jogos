@@ -9,10 +9,11 @@ import {
   vincularJogo,
   tratarErroApi,
 } from "../services/vinculo";
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SearchBar } from "../components/SearchBar";
 
 interface Jogo {
   id: number;
@@ -31,10 +32,10 @@ const Biblioteca = () => {
   const [erroBusca, setErroBusca] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { searchQuery } = useOutletContext<{ searchQuery: string }>();
 
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
     queryKey: ["biblioteca"],
@@ -244,6 +245,20 @@ const Biblioteca = () => {
     <>
       {erroBusca && <div className="popup-erro">{erroBusca}</div>}
       <div className="biblioteca-container">
+        <SearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          jogos={jogos}
+          placeholder="Buscar em Biblioteca..."
+          onResultClick={(jogoId) => {
+            const jogoEncontrado = jogos.find((j) => j.id === jogoId);
+            if (jogoEncontrado) {
+              setJogoSelecionado(jogoEncontrado);
+              setShowPopup(true);
+            }
+          }}
+          showResults={true}
+        />
         {carregando ? (
           <div
             style={{ textAlign: "center", color: "#888", marginTop: "50px" }}

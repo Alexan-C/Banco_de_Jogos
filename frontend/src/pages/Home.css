@@ -425,3 +425,72 @@ position: absolute;
     height: 44px;
   }
 }
+
+/* ========================================
+   PAGINATION DOTS - Carretel de Navegação
+   ======================================== */
+
+.carousel-dots {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  animation: fadeInUp 0.6s ease-out 0.5s both;
+  pointer-events: auto;
+}
+
+
+.carousel-dots .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  padding: 0;
+  flex-shrink: 0;
+  pointer-events: auto;
+  animation: none;
+}
+
+.carousel-dots .dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(1.2);
+}
+
+.carousel-dots .dot.active {
+  width: 10px;
+  background: #7b61ff;
+  transform: scale(1.2);
+  box-shadow: 0 0 15px rgba(123, 97, 255, 0.6), 0 0 30px rgba(123, 97, 255, 0.3);
+}
+
+.carousel-dots .dot:disabled {
+  cursor: not-allowed;
+}
+
+/* MOBILE - Ajustes para dots em telas pequenas */
+@media (max-width: 768px) {
+  .carousel-dots {
+    bottom: 15px;
+    gap: 8px;
+    padding: 8px 15px;
+  }
+
+  .carousel-dots .dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .carousel-dots .dot.active {
+    width: 24px;
+  }
+}

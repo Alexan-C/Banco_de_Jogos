@@ -1,7 +1,6 @@
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./mainlayout.css";
-import React, { useEffect, useState, useMemo } from "react";
-import api from "../services/api";
+import React, { useEffect, useState } from "react";
 import {
   ChevronDown,
   Gamepad2,
@@ -9,18 +8,8 @@ import {
   LogOut,
   Crown,
   LogIn,
-  Search,
-  X,
 } from "lucide-react";
 
-interface Jogo {
-  id: number;
-  ano: number;
-  nome: string;
-  descricao: string;
-  categoria: string;
-  capa_url: string;
-}
 const rotas: Record<string, string> = {
   Início: "/",
   Biblioteca: "/minha_biblioteca",
@@ -32,8 +21,6 @@ export const MainLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuAberto, setMenuAberto] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [todosOsJogos, setTodosOsJogos] = useState<Jogo[]>([]);
 
   // admin verificação e verificação de login
   const activeTab =
@@ -43,9 +30,6 @@ export const MainLayout: React.FC = () => {
   const adminSalvo = localStorage.getItem("user_admin");
   const nome = localStorage.getItem("nome") || "Jogador";
   const eAdmin = estaLogado && adminSalvo === "true";
-
-  const mostrarBusca =
-    location.pathname === "/minha_biblioteca" || location.pathname === "/jogos";
 
   const handleSair = () => {
     localStorage.removeItem("token");
@@ -58,33 +42,11 @@ export const MainLayout: React.FC = () => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setSearchQuery("");
       setMenuAberto(false);
     }, 0);
 
     return () => clearTimeout(timeout);
   }, [location.pathname]);
-
-  useEffect(() => {
-    const buscarJogos = async () => {
-      try {
-        const response = await api.get("/pedidos/list");
-        if (response.data && response.data.length > 0) 
-        setTodosOsJogos(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar lista de jogos:", error);
-      }
-    };
-    buscarJogos();
-  }, []);
-
-  const jogosFiltrados = useMemo(() => {
-    if (!searchQuery) return todosOsJogos;
-
-    return todosOsJogos.filter((jogo) =>
-      jogo.nome.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [searchQuery, todosOsJogos]);
 
   useEffect(() => {
     document.title = "Gerenciar";
@@ -117,75 +79,6 @@ export const MainLayout: React.FC = () => {
         </div>
 
         <div className="profile-section">
-          <div
-            className={`search-container-nav ${mostrarBusca ? "visible" : ""}`}
-          >
-            {mostrarBusca && (
-              <div className="search-input-wrapper">
-                <Search className="search-icon" size={18} />
-                <input
-                  type="text"
-                  placeholder={`Buscar em ${activeTab}...`}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-
-                {searchQuery && (
-                  <div className="search-results-dropdown">
-                    {jogosFiltrados.length > 0 ? (
-                      jogosFiltrados.map((jogo) => (
-                        <div
-                          key={jogo.id}
-                          className="search-result-item"
-                          onClick={() => {
-                            const jogoId = jogo.id;
-                            const noCaminhoCerto =
-                              location.pathname === "/minha_biblioteca" ||
-                              location.pathname === "/jogos";
-
-                            if (noCaminhoCerto) {
-                              window.dispatchEvent(
-                                new CustomEvent("abrirJogo", { detail: jogoId }),
-                              );
-                            } else {
-                              navigate("/minha_biblioteca", {
-                                state: { abrirJogoId: jogoId },
-                              });
-                            }
-
-                            setSearchQuery("");
-                          }}
-                        >
-                          <img
-                            src={jogo.capa_url}
-                            alt={jogo.nome}
-                            className="result-img"
-                          />
-                          <div className="result-info">
-                            <span className="result-name">{jogo.nome}</span>
-                            <span className="result-category">
-                              {jogo.categoria || "Digital Game"}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="no-results">Nenhum jogo encontrado</div>
-                    )}
-                  </div>
-                )}
-
-                {searchQuery && (
-                  <X
-                    className="clear-search"
-                    size={16}
-                    onClick={() => setSearchQuery("")}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-
           {estaLogado ? (
             <>
               <div className="user-info">
@@ -239,7 +132,7 @@ export const MainLayout: React.FC = () => {
 
       <main className="content-area">
         <div key={location.pathname} className="animacao-suave">
-          <Outlet context={{ searchQuery }} />
+          <Outlet />
         </div>
       </main>
       <footer className="footer-main">
