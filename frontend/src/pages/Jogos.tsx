@@ -47,33 +47,107 @@ const Jogos = () => {
 
   const queryClient = useQueryClient();
 
+const atualizarPlataformas = (
+  plataformas: Array<{
+    plataforma: string;
+    subcategoria: string | null;
+  }>,
+  plataforma: string,
+  sub: string | null,
+  remover: boolean,
+) => {
+  if (remover) {
+    return plataformas.filter(
+      (p) =>
+        !(
+          p.plataforma === plataforma &&
+          p.subcategoria === sub
+        ),
+    );
+  }
+
+  return [
+    ...plataformas,
+    {
+      plataforma,
+      subcategoria: sub,
+    },
+  ];
+};
+
 const handleVinculo = async (
   plataforma: string,
   sub: string | null,
 ) => {
   if (!jogoSelecionado) return;
 
-  const jogoAtualizado = jogos.find(
-    (j) => j.id === jogoSelecionado.id,
-  );
- if (!estaAutenticado()) {
-    navigate("/login", { 
-      state: { 
+  if (!estaAutenticado()) {
+    navigate("/login", {
+      state: {
         from: location.pathname,
-        abrirJogoId: jogoSelecionado.id 
-      } 
+        abrirJogoId: jogoSelecionado.id,
+      },
     });
+
     return;
   }
+
+
+  const cacheAnterior =
+    queryClient.getQueryData<Jogo[]>(["jogos"]);
+
+  
+  const jogoAtual = jogos.find(
+    (j) => j.id === jogoSelecionado.id,
+  );
+
   const plataformasAtuais =
-    jogoAtualizado?.detalhes_plataformas || [];
+    jogoAtual?.detalhes_plataformas || [];
+
 
   const jaExiste = plataformasAtuais.some(
     (p) =>
       p.plataforma === plataforma &&
       p.subcategoria === sub,
   );
+
+
+  queryClient.setQueryData<Jogo[]>(["jogos"], (prev = []) =>
+    prev.map((jogo) => {
+      if (jogo.id !== jogoSelecionado.id) {
+        return jogo;
+      }
+
+      return {
+        ...jogo,
+        detalhes_plataformas: atualizarPlataformas(
+          jogo.detalhes_plataformas || [],
+          plataforma,
+          sub,
+          jaExiste,
+        ),
+      };
+    }),
+  );
+
+
+  setJogoSelecionado((prev) => {
+    if (!prev) return prev;
+
+    return {
+      ...prev,
+      detalhes_plataformas: atualizarPlataformas(
+        prev.detalhes_plataformas || [],
+        plataforma,
+        sub,
+        jaExiste,
+      ),
+    };
+  });
+
   try {
+
+    // ===== REQUEST =====
     if (jaExiste) {
       await desvincularJogo(
         jogoSelecionado.id,
@@ -88,65 +162,18 @@ const handleVinculo = async (
       });
     }
 
-    queryClient.setQueryData<Jogo[]>(["jogos"], (prev = []) =>
-      prev.map((jogo) => {
-        if (jogo.id !== jogoSelecionado.id) return jogo;
+  } catch (err) {
 
-        const plataformas =
-          jogo.detalhes_plataformas || [];
-
-        return {
-          ...jogo,
-          detalhes_plataformas: jaExiste
-            ? plataformas.filter(
-                (p) =>
-                  !(
-                    p.plataforma === plataforma &&
-                    p.subcategoria === sub
-                  ),
-              )
-            : [
-                ...plataformas,
-                {
-                  plataforma,
-                  subcategoria: sub,
-                },
-              ],
-        };
-      }),
+    // ===== ROLLBACK =====
+    queryClient.setQueryData(
+      ["jogos"],
+      cacheAnterior,
     );
 
-    setJogoSelecionado((prev) => {
-      if (!prev) return prev;
-
-      const plataformas =
-        prev.detalhes_plataformas || [];
-
-      return {
-        ...prev,
-        detalhes_plataformas: jaExiste
-          ? plataformas.filter(
-              (p) =>
-                !(
-                  p.plataforma === plataforma &&
-                  p.subcategoria === sub
-                ),
-            )
-          : [
-              ...plataformas,
-              {
-                plataforma,
-                subcategoria: sub,
-              },
-            ],
-      };
-    });
-
-    await queryClient.invalidateQueries({ queryKey: ["jogos"] });
-  } catch (err) {
     alert(tratarErroApi(err));
   }
 };
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -437,5 +464,5 @@ const jogoTemPlataforma = (
         )}
     </>
   );
-};
+}
 export default Jogos;
