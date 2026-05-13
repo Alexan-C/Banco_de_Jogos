@@ -1,4 +1,4 @@
-import "../pages/Biblioteca.css";
+import "./Biblioteca.css";
 import { useEffect, useState, useMemo } from "react";
 import api from "../../services/api";
 import { createPortal } from "react-dom";

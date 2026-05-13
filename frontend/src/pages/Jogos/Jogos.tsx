@@ -1,4 +1,4 @@
-import "../pages/Jogos.css";
+import "./Jogos.css";
 import { useEffect, useState, useMemo } from "react";
 import api from "../../services/api";
 import { createPortal } from "react-dom";

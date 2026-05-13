@@ -1,5 +1,5 @@
 import { Search, X } from "lucide-react";
-import "../components/SearchBar.css";
+import "./SearchBar.css";
 import { useState, useEffect } from "react";
 
 interface Jogo {
