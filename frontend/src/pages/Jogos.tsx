@@ -8,7 +8,7 @@ import {desvincularJogo,vincularJogo,tratarErroApi} from "../services/vinculo";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { SearchBar } from "../components/SearchBar";
 
 interface Jogo {
@@ -75,10 +75,112 @@ const atualizarPlataformas = (
   ];
 };
 
-const handleVinculo = async (
+const vinculoMutation = useMutation({
+  mutationFn: async ({
+    jogoId,
+    plataforma,
+    sub,
+    jaExiste,
+  }: {
+    jogoId: number;
+    plataforma: string;
+    sub: string | null;
+    jaExiste: boolean;
+  }) => {
+
+    if (jaExiste) {
+      return await desvincularJogo(
+        jogoId,
+        plataforma,
+        sub,
+      );
+    }
+
+    return await vincularJogo({
+      jogo_id: jogoId,
+      plataforma,
+      subcategoria: sub,
+    });
+  },
+
+  // ===== UPDATE OTIMISTA =====
+  onMutate: async ({
+    jogoId,
+    plataforma,
+    sub,
+    jaExiste,
+  }) => {
+
+    await queryClient.cancelQueries({
+      queryKey: ["jogos"],
+    });
+
+    const cacheAnterior =
+      queryClient.getQueryData<Jogo[]>(["jogos"]);
+
+    queryClient.setQueryData<Jogo[]>(
+      ["jogos"],
+      (prev = []) =>
+        prev.map((jogo) => {
+          if (jogo.id !== jogoId) {
+            return jogo;
+          }
+
+          return {
+            ...jogo,
+            detalhes_plataformas:
+              atualizarPlataformas(
+                jogo.detalhes_plataformas || [],
+                plataforma,
+                sub,
+                jaExiste,
+              ),
+          };
+        }),
+    );
+
+    setJogoSelecionado((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        detalhes_plataformas:
+          atualizarPlataformas(
+            prev.detalhes_plataformas || [],
+            plataforma,
+            sub,
+            jaExiste,
+          ),
+      };
+    });
+
+    return { cacheAnterior };
+  },
+
+  // ===== ROLLBACK =====
+  onError: (err, _, context) => {
+
+    queryClient.setQueryData(
+      ["jogos"],
+      context?.cacheAnterior,
+    );
+
+    alert(tratarErroApi(err));
+  },
+
+  // ===== SINCRONIZA =====
+  onSettled: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["jogos"],
+    });
+  },
+});
+
+const handleVinculo = (
   plataforma: string,
   sub: string | null,
 ) => {
+
   if (!jogoSelecionado) return;
 
   if (!estaAutenticado()) {
@@ -92,18 +194,8 @@ const handleVinculo = async (
     return;
   }
 
-
-  const cacheAnterior =
-    queryClient.getQueryData<Jogo[]>(["jogos"]);
-
-  
-  const jogoAtual = jogos.find(
-    (j) => j.id === jogoSelecionado.id,
-  );
-
   const plataformasAtuais =
-    jogoAtual?.detalhes_plataformas || [];
-
+    jogoSelecionado.detalhes_plataformas || [];
 
   const jaExiste = plataformasAtuais.some(
     (p) =>
@@ -111,67 +203,12 @@ const handleVinculo = async (
       p.subcategoria === sub,
   );
 
-
-  queryClient.setQueryData<Jogo[]>(["jogos"], (prev = []) =>
-    prev.map((jogo) => {
-      if (jogo.id !== jogoSelecionado.id) {
-        return jogo;
-      }
-
-      return {
-        ...jogo,
-        detalhes_plataformas: atualizarPlataformas(
-          jogo.detalhes_plataformas || [],
-          plataforma,
-          sub,
-          jaExiste,
-        ),
-      };
-    }),
-  );
-
-
-  setJogoSelecionado((prev) => {
-    if (!prev) return prev;
-
-    return {
-      ...prev,
-      detalhes_plataformas: atualizarPlataformas(
-        prev.detalhes_plataformas || [],
-        plataforma,
-        sub,
-        jaExiste,
-      ),
-    };
+  vinculoMutation.mutate({
+    jogoId: jogoSelecionado.id,
+    plataforma,
+    sub,
+    jaExiste,
   });
-
-  try {
-
-    // ===== REQUEST =====
-    if (jaExiste) {
-      await desvincularJogo(
-        jogoSelecionado.id,
-        plataforma,
-        sub,
-      );
-    } else {
-      await vincularJogo({
-        jogo_id: jogoSelecionado.id,
-        plataforma,
-        subcategoria: sub,
-      });
-    }
-
-  } catch (err) {
-
-    // ===== ROLLBACK =====
-    queryClient.setQueryData(
-      ["jogos"],
-      cacheAnterior,
-    );
-
-    alert(tratarErroApi(err));
-  }
 };
 
 
@@ -464,5 +501,5 @@ const jogoTemPlataforma = (
         )}
     </>
   );
-}
+};
 export default Jogos;
