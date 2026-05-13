@@ -27,7 +27,7 @@ interface Jogo {
 
 const Jogos = () => {
   const [showPopup, setShowPopup] = useState(false);
-  const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
+  const [jogoSelecionadoId, setJogoSelecionadoId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const location = useLocation();
@@ -46,6 +46,12 @@ const Jogos = () => {
   });
 
   const queryClient = useQueryClient();
+
+    const jogoSelecionado = useMemo(() => {
+  return jogos.find(
+    (j) => j.id === jogoSelecionadoId,
+  ) || null;
+}, [jogos, jogoSelecionadoId]);
 
 const atualizarPlataformas = (
   plataformas: Array<{
@@ -138,22 +144,6 @@ const vinculoMutation = useMutation({
           };
         }),
     );
-
-    setJogoSelecionado((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        detalhes_plataformas:
-          atualizarPlataformas(
-            prev.detalhes_plataformas || [],
-            plataforma,
-            sub,
-            jaExiste,
-          ),
-      };
-    });
-
     return { cacheAnterior };
   },
 
@@ -181,13 +171,13 @@ const handleVinculo = (
   sub: string | null,
 ) => {
 
-  if (!jogoSelecionado) return;
+  if (!jogoSelecionadoId) return;
 
   if (!estaAutenticado()) {
     navigate("/login", {
       state: {
         from: location.pathname,
-        abrirJogoId: jogoSelecionado.id,
+        abrirJogoId: jogoSelecionadoId,
       },
     });
 
@@ -195,7 +185,7 @@ const handleVinculo = (
   }
 
   const plataformasAtuais =
-    jogoSelecionado.detalhes_plataformas || [];
+    jogoSelecionado?.detalhes_plataformas || [];
 
   const jaExiste = plataformasAtuais.some(
     (p) =>
@@ -204,13 +194,12 @@ const handleVinculo = (
   );
 
   vinculoMutation.mutate({
-    jogoId: jogoSelecionado.id,
+    jogoId: jogoSelecionadoId,
     plataforma,
     sub,
     jaExiste,
   });
 };
-
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -277,7 +266,7 @@ const handleVinculo = (
         (jogo) => Number(jogo.id) === Number(id),
       );
       if (jogoEncontrado) {
-        setJogoSelecionado(jogoEncontrado);
+        setJogoSelecionadoId(jogoEncontrado.id);
         setShowPopup(true);
       }
     };
@@ -341,7 +330,7 @@ const jogoTemPlataforma = (
           onResultClick={(jogoId) => {
             const jogoEncontrado = jogos.find((j) => j.id === jogoId);
             if (jogoEncontrado) {
-              setJogoSelecionado(jogoEncontrado);
+              setJogoSelecionadoId(jogoEncontrado.id);
               setShowPopup(true);
             }
           }}
@@ -381,7 +370,7 @@ const jogoTemPlataforma = (
                   whileTap={{ scale: 0.95 }}
                   className="card-jogo-minimalista"
                   onClick={() => {
-                    setJogoSelecionado(jogo);
+                    setJogoSelecionadoId(jogo.id);
                     setShowPopup(true);
                   }}
                 >

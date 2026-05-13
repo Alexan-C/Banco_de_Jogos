@@ -31,7 +31,7 @@ interface Jogo {
 const Biblioteca = () => {
   const [erroBusca, setErroBusca] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
-  const [jogoSelecionado, setJogoSelecionado] = useState<Jogo | null>(null);
+  const [jogoSelecionadoId, setJogoSelecionadoId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const location = useLocation();
@@ -51,6 +51,12 @@ const Biblioteca = () => {
   });
 
     const queryClient = useQueryClient();
+
+    const jogoSelecionado = useMemo(() => {
+  return jogos.find(
+    (j) => j.id === jogoSelecionadoId,
+  ) || null;
+}, [jogos, jogoSelecionadoId]);
 
 const atualizarPlataformas = (
   plataformas: Array<{
@@ -117,14 +123,14 @@ const vinculoMutation = useMutation({
   }) => {
 
     await queryClient.cancelQueries({
-      queryKey: ["jogos"],
+      queryKey: ["biblioteca"],
     });
 
     const cacheAnterior =
-      queryClient.getQueryData<Jogo[]>(["jogos"]);
+      queryClient.getQueryData<Jogo[]>(["biblioteca"]);
 
     queryClient.setQueryData<Jogo[]>(
-      ["jogos"],
+      ["biblioteca"],
       (prev = []) =>
         prev.map((jogo) => {
           if (jogo.id !== jogoId) {
@@ -143,22 +149,6 @@ const vinculoMutation = useMutation({
           };
         }),
     );
-
-    setJogoSelecionado((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        detalhes_plataformas:
-          atualizarPlataformas(
-            prev.detalhes_plataformas || [],
-            plataforma,
-            sub,
-            jaExiste,
-          ),
-      };
-    });
-
     return { cacheAnterior };
   },
 
@@ -166,7 +156,7 @@ const vinculoMutation = useMutation({
   onError: (err, _, context) => {
 
     queryClient.setQueryData(
-      ["jogos"],
+      ["biblioteca"],
       context?.cacheAnterior,
     );
 
@@ -176,7 +166,7 @@ const vinculoMutation = useMutation({
   // ===== SINCRONIZA =====
   onSettled: () => {
     queryClient.invalidateQueries({
-      queryKey: ["jogos"],
+      queryKey: ["biblioteca"],
     });
   },
 });
@@ -186,13 +176,13 @@ const handleVinculo = (
   sub: string | null,
 ) => {
 
-  if (!jogoSelecionado) return;
+  if (!jogoSelecionadoId) return;
 
   if (!estaAutenticado()) {
     navigate("/login", {
       state: {
         from: location.pathname,
-        abrirJogoId: jogoSelecionado.id,
+        abrirJogoId: jogoSelecionadoId,
       },
     });
 
@@ -200,7 +190,7 @@ const handleVinculo = (
   }
 
   const plataformasAtuais =
-    jogoSelecionado.detalhes_plataformas || [];
+    jogoSelecionado?.detalhes_plataformas || [];
 
   const jaExiste = plataformasAtuais.some(
     (p) =>
@@ -209,7 +199,7 @@ const handleVinculo = (
   );
 
   vinculoMutation.mutate({
-    jogoId: jogoSelecionado.id,
+    jogoId: jogoSelecionadoId,
     plataforma,
     sub,
     jaExiste,
@@ -270,7 +260,7 @@ const handleVinculo = (
     const abrirModalComJogo = (id: number) => {
       const jogoEncontrado = jogos.find((jogo) => jogo.id === id);
       if (jogoEncontrado) {
-        setJogoSelecionado(jogoEncontrado);
+        setJogoSelecionadoId(jogoEncontrado.id);
         setShowPopup(true);
       }
     };
@@ -326,7 +316,7 @@ const handleVinculo = (
       );
 
       if (jogoEncontrado) {
-        setJogoSelecionado(jogoEncontrado);
+        setJogoSelecionadoId(jogoEncontrado.id);
         setShowPopup(true);
         setErroBusca(null);
       } else {
@@ -360,7 +350,7 @@ const handleVinculo = (
           onResultClick={(jogoId) => {
             const jogoEncontrado = jogos.find((j) => j.id === jogoId);
             if (jogoEncontrado) {
-              setJogoSelecionado(jogoEncontrado);
+              setJogoSelecionadoId(jogoEncontrado.id);
               setShowPopup(true);
             }
           }}
@@ -391,7 +381,7 @@ const handleVinculo = (
                   whileTap={{ scale: 0.98 }}
                   className="card-jogo-minimalista"
                   onClick={() => {
-                    setJogoSelecionado(jogo);
+                    setJogoSelecionadoId(jogo.id);
                     setShowPopup(true);
                   }}
                 >
