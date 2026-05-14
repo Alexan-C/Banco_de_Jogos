@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -42,7 +42,7 @@ const cardMesaVariants: Variants = {
 export function Home() {
   const [indice, setIndice] = useState(0);
   const [estaAnimando, setEstaAnimando] = useState(false);
-
+  const localocation = useLocation();
   const navigate = useNavigate();
 
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
@@ -68,20 +68,19 @@ export function Home() {
     setIndice((prev) => (prev - 1 + jogos.length) % jogos.length);
   }, [jogos.length, estaAnimando]);
 
-useEffect(() => {
-  if (jogos.length <= 1 || carregando) return;
+  useEffect(() => {
+    if (jogos.length <= 1 || carregando) return;
 
-  const timer = setInterval(() => {
-    setEstaAnimando((animando) => {
-      if (animando) return animando;
-      proximoJogo();
-      return animando;
-    });
-  }, 7000);
+    const timer = setInterval(() => {
+      setEstaAnimando((animando) => {
+        if (animando) return animando;
+        proximoJogo();
+        return animando;
+      });
+    }, 7000);
 
-  return () => clearInterval(timer);
-}, [proximoJogo, jogos.length, carregando]);
-
+    return () => clearInterval(timer);
+  }, [proximoJogo, jogos.length, carregando]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -93,7 +92,7 @@ useEffect(() => {
   }, []);
   useEffect(() => {
     document.title = "GameVault";
-}, []);
+  }, []);
 
   const backgroundStyle = useMemo(() => {
     if (!jogo?.capa_url) return {};
@@ -174,9 +173,17 @@ useEffect(() => {
               <div className="action-area">
                 <button
                   className="btn-Estilo-action"
-                  onClick={() =>
-                    navigate("/jogos", { state: { abrirJogoId: jogo.id } })
-                  }
+                  onClick={() => {
+                    if (!jogo?.id) return;
+
+                    const jogoId = jogo.id;
+
+                    navigate("/jogos", {
+                      state: {
+                        abrirJogoId: jogoId,
+                      },
+                    });
+                  }}
                 >
                   Vincular Jogo
                 </button>
@@ -200,16 +207,17 @@ useEffect(() => {
                   />
                 ))}
               </div>
-              
-              
             )}
           </motion.div>
         </AnimatePresence>
-                <button
+        <button
           className="nav-arrow right"
           onClick={proximoJogo}
           disabled={estaAnimando}
-        > › </button>
+        >
+          {" "}
+          ›{" "}
+        </button>
       </main>
     </div>
   );
