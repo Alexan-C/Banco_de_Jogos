@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -42,7 +42,6 @@ const cardMesaVariants: Variants = {
 export function Home() {
   const [indice, setIndice] = useState(0);
   const [estaAnimando, setEstaAnimando] = useState(false);
-  const localocation = useLocation();
   const navigate = useNavigate();
 
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
