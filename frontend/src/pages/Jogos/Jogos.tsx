@@ -1,5 +1,5 @@
 import "./Jogos.css";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import api from "../../services/api";
 import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
@@ -37,6 +37,7 @@ const Jogos = () => {
   );
   const [searchQuery, setSearchQuery] = useState("");
 
+  const popupJaAberto = useRef(false);
   const location = useLocation();
   const navigate = useNavigate();
   const estaAutenticado = () => {
@@ -52,6 +53,7 @@ const Jogos = () => {
     gcTime: 1000 * 60 * 5, // Limpar cache após 5min se não usado
     refetchOnWindowFocus: false,
   });
+  
 
   const queryClient = useQueryClient();
 
@@ -259,48 +261,67 @@ const Jogos = () => {
     }
     return "";
   };
-  useEffect(() => {
-    const handleEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<number>;
+useEffect(() => {
+  const handleEvent = (e: Event) => {
+    const customEvent = e as CustomEvent<number>;
 
-      if (!customEvent.detail) return;
+    if (!customEvent.detail) return;
 
-      const jogoEncontrado = jogos.find(
-        (j) => j.id === Number(customEvent.detail),
-      );
+    const jogoEncontrado = jogos.find(
+      (j) => j.id === Number(customEvent.detail),
+    );
 
-      if (location.state?.abrirJogoId) {
-        const jogoEncontrado = jogos.find(
-          (jogo) => jogo.id === location.state.abrirJogoId,
-        );
+    if (jogoEncontrado) {
+      setJogoSelecionadoId(jogoEncontrado.id);
+      setShowPopup(true);
+      setErroBusca(null);
+    } else {
+      setErroBusca("Você não vinculou esse jogo");
 
-        if (jogoEncontrado) {
-          setJogoSelecionadoId(jogoEncontrado.id);
-          setShowPopup(true);
-        }
-      }
-      if (jogoEncontrado) {
-        setJogoSelecionadoId(jogoEncontrado.id);
-        setShowPopup(true);
+      setTimeout(() => {
         setErroBusca(null);
-      } else {
-        setErroBusca("Você não vinculou esse jogo");
+      }, 3000);
+    }
+  };
 
-        setTimeout(() => {
-          setErroBusca(null);
-        }, 3000);
-      }
-    };
+  window.addEventListener("abrirJogo", handleEvent);
 
-    window.addEventListener("abrirJogo", handleEvent);
+  return () => {
+    window.removeEventListener("abrirJogo", handleEvent);
+  };
+}, [jogos]);
 
-    return () => {
-      window.removeEventListener("abrirJogo", handleEvent);
-    };
-    // ✅ Dependência apenas do valor específico, não do objeto todo
-  }, [jogos, location.state?.abrirJogoId, location.pathname]);
+useEffect(() => {
+  if (popupJaAberto.current) return;
+  if (carregando || jogos.length === 0) return;
 
-  // ✅ Efeito para controlar overflow quando modal abre/fecha
+  const jogoId = location.state?.abrirJogoId;
+  if (!jogoId) return;
+
+  const jogoEncontrado = jogos.find(
+    (jogo) => jogo.id === Number(jogoId),
+  );
+
+  if (!jogoEncontrado) return;
+
+
+  popupJaAberto.current = true;
+
+
+  setTimeout(() => {
+    setJogoSelecionadoId(jogoEncontrado.id);
+    setShowPopup(true);
+
+
+    navigate(location.pathname, {
+      replace: true,
+      state: {},
+    });
+  }, 0);
+
+}, [carregando, jogos, location, navigate]);
+
+  // Efeito para controlar overflow quando modal abre/fecha
   useEffect(() => {
     if (showPopup) {
       document.body.style.overflow = "hidden";
@@ -334,6 +355,7 @@ const Jogos = () => {
     },
     [jogoSelecionado],
   );
+  
 
   return (
     <>

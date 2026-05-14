@@ -48,8 +48,20 @@ export function Home() {
     queryKey: ["home-jogos"],
     queryFn: async () => {
       const res = await api.get("pedidos/list");
-      return Array.isArray(res.data) ? res.data : [];
+
+      // 1. Extraímos os dados e garantimos que é um array
+      const listaOriginal = Array.isArray(res.data) ? res.data : [];
+
+      // 2. Criamos uma cópia e embaralhamos ANTES de retornar
+      // Usamos o [...listaOriginal] para não mexer na variável original
+      const listaEmbaralhada = [...listaOriginal].sort(
+        () => Math.random() - 0.5,
+      );
+
+      // 3. Agora sim, retornamos o resultado final
+      return listaEmbaralhada;
     },
+
     staleTime: 1000 * 60 * 5,
   });
 
