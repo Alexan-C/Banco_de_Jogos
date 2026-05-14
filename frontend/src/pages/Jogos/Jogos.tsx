@@ -143,15 +143,16 @@ const Jogos = () => {
 
     // ===== SINCRONIZA =====
     onSettled: async () => {
-      await queryClient.refetchQueries({
+       queryClient.refetchQueries({
         queryKey: ["jogos"],
       });
 
-      await queryClient.refetchQueries({
+       queryClient.refetchQueries({
         queryKey: ["biblioteca"],
       });
     },
   });
+
   const PLATAFORMAS_VALIDAS = ["PS5", "XBOX", "PC"];
 
   const handleVinculo = (plataforma: string, sub: string | null) => {
