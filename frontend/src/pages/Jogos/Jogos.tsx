@@ -1,10 +1,14 @@
 import "./Jogos.css";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../services/api";
 import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
 import { SiEpicgames } from "react-icons/si";
-import {desvincularJogo,vincularJogo,tratarErroApi} from "../../services/vinculo";
+import {
+  desvincularJogo,
+  vincularJogo,
+  tratarErroApi,
+} from "../../services/vinculo";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Variants } from "framer-motion";
@@ -27,106 +31,90 @@ interface Jogo {
 
 const Jogos = () => {
   const [showPopup, setShowPopup] = useState(false);
-  const [jogoSelecionadoId, setJogoSelecionadoId] = useState<number | null>(null);
+  const [erroBusca, setErroBusca] = useState<string | null>(null);
+  const [jogoSelecionadoId, setJogoSelecionadoId] = useState<number | null>(
+    null,
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
   const estaAutenticado = () => {
-  return !!localStorage.getItem("token"); 
-    };
+    return !!localStorage.getItem("token");
+  };
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
     queryKey: ["jogos"],
     queryFn: async () => {
       const response = await api.get("pedidos/list");
       return response.data;
     },
-    staleTime: 1000 * 30, // Reduzido de 5min para 30s
+    staleTime: 0, // Reduzido de 5min para 30s
     gcTime: 1000 * 60 * 5, // Limpar cache após 5min se não usado
+    refetchOnWindowFocus: false,
   });
 
   const queryClient = useQueryClient();
 
-    const jogoSelecionado = useMemo(() => {
-  return jogos.find(
-    (j) => j.id === jogoSelecionadoId,
-  ) || null;
-}, [jogos, jogoSelecionadoId]);
+  const jogoSelecionado = useMemo(() => {
+    return jogos.find((j) => j.id === jogoSelecionadoId) || null;
+  }, [jogos, jogoSelecionadoId]);
 
-const atualizarPlataformas = (
-  plataformas: Array<{
-    plataforma: string;
-    subcategoria: string | null;
-  }>,
-  plataforma: string,
-  sub: string | null,
-  remover: boolean,
-) => {
-  if (remover) {
-    return plataformas.filter(
-      (p) =>
-        !(
-          p.plataforma === plataforma &&
-          p.subcategoria === sub
-        ),
-    );
-  }
-
-  return [
-    ...plataformas,
-    {
-      plataforma,
-      subcategoria: sub,
-    },
-  ];
-};
-
-const vinculoMutation = useMutation({
-  mutationFn: async ({
-    jogoId,
-    plataforma,
-    sub,
-    jaExiste,
-  }: {
-    jogoId: number;
-    plataforma: string;
-    sub: string | null;
-    jaExiste: boolean;
-  }) => {
-
-    if (jaExiste) {
-      return await desvincularJogo(
-        jogoId,
-        plataforma,
-        sub,
+  const atualizarPlataformas = (
+    plataformas: Array<{
+      plataforma: string;
+      subcategoria: string | null;
+    }>,
+    plataforma: string,
+    sub: string | null,
+    remover: boolean,
+  ) => {
+    if (remover) {
+      return plataformas.filter(
+        (p) => !(p.plataforma === plataforma && p.subcategoria === sub),
       );
     }
 
-    return await vincularJogo({
-      jogo_id: jogoId,
+    return [
+      ...plataformas,
+      {
+        plataforma,
+        subcategoria: sub,
+      },
+    ];
+  };
+
+  const vinculoMutation = useMutation({
+    mutationFn: async ({
+      jogoId,
       plataforma,
-      subcategoria: sub,
-    });
-  },
+      sub,
+      jaExiste,
+    }: {
+      jogoId: number;
+      plataforma: string;
+      sub: string | null;
+      jaExiste: boolean;
+    }) => {
+      if (jaExiste) {
+        return await desvincularJogo(jogoId, plataforma, sub);
+      }
 
-  // ===== UPDATE OTIMISTA =====
-  onMutate: async ({
-    jogoId,
-    plataforma,
-    sub,
-    jaExiste,
-  }) => {
+      return await vincularJogo({
+        jogo_id: jogoId,
+        plataforma,
+        subcategoria: sub,
+      });
+    },
 
-    await queryClient.cancelQueries({
-      queryKey: ["jogos"],
-    });
+    // ===== UPDATE OTIMISTA =====
+    onMutate: async ({ jogoId, plataforma, sub, jaExiste }) => {
+      await queryClient.cancelQueries({
+        queryKey: ["jogos"],
+      });
 
-    const cacheAnterior =
-      queryClient.getQueryData<Jogo[]>(["jogos"]);
+      const cacheAnterior = queryClient.getQueryData<Jogo[]>(["jogos"]);
 
-    queryClient.setQueryData<Jogo[]>(
-      ["jogos"],
-      (prev = []) =>
+      queryClient.setQueryData<Jogo[]>(["jogos"], (prev = []) =>
         prev.map((jogo) => {
           if (jogo.id !== jogoId) {
             return jogo;
@@ -134,79 +122,86 @@ const vinculoMutation = useMutation({
 
           return {
             ...jogo,
-            detalhes_plataformas:
-              atualizarPlataformas(
-                jogo.detalhes_plataformas || [],
-                plataforma,
-                sub,
-                jaExiste,
-              ),
+            detalhes_plataformas: atualizarPlataformas(
+              jogo.detalhes_plataformas || [],
+              plataforma,
+              sub,
+              jaExiste,
+            ),
           };
         }),
-    );
-    return { cacheAnterior };
-  },
+      );
+      return { cacheAnterior };
+    },
 
-  // ===== ROLLBACK =====
-  onError: (err, _, context) => {
+    // ===== ROLLBACK =====
+    onError: (err, _, context) => {
+      queryClient.setQueryData(["jogos"], context?.cacheAnterior);
 
-    queryClient.setQueryData(
-      ["jogos"],
-      context?.cacheAnterior,
-    );
+      alert(tratarErroApi(err));
+    },
 
-    alert(tratarErroApi(err));
-  },
+    // ===== SINCRONIZA =====
+    onSettled: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ["jogos"],
+      });
 
-  // ===== SINCRONIZA =====
-  onSettled: () => {
-    queryClient.invalidateQueries({
-      queryKey: ["jogos"],
-    });
-  },
-});
-
-const handleVinculo = (
-  plataforma: string,
-  sub: string | null,
-) => {
-
-  if (!jogoSelecionadoId) return;
-
-  if (!estaAutenticado()) {
-    navigate("/login", {
-      state: {
-        from: location.pathname,
-        abrirJogoId: jogoSelecionadoId,
-      },
-    });
-
-    return;
-  }
-
-  const plataformasAtuais =
-    jogoSelecionado?.detalhes_plataformas || [];
-
-  const jaExiste = plataformasAtuais.some(
-    (p) =>
-      p.plataforma === plataforma &&
-      p.subcategoria === sub,
-  );
-
-  vinculoMutation.mutate({
-    jogoId: jogoSelecionadoId,
-    plataforma,
-    sub,
-    jaExiste,
+      await queryClient.refetchQueries({
+        queryKey: ["biblioteca"],
+      });
+    },
   });
-};
+  const PLATAFORMAS_VALIDAS = ["PS5", "XBOX", "PC"];
+
+  const handleVinculo = (plataforma: string, sub: string | null) => {
+    if (!jogoSelecionadoId) return;
+    if (vinculoMutation.isPending) {
+      return;
+    }
+
+    if (!estaAutenticado()) {
+      navigate("/login", {
+        state: {
+          from: location.pathname,
+          abrirJogoId: jogoSelecionadoId,
+        },
+      });
+
+      return;
+    }
+    if (!PLATAFORMAS_VALIDAS.includes(plataforma)) {
+      console.warn("Plataforma inválida:", plataforma);
+      return;
+    }
+
+    if (plataforma === "PC") {
+      if (!["Steam", "Epic"].includes(sub || "")) {
+        console.warn("Subcategoria inválida para PC:", sub);
+        return;
+      }
+    }
+
+    const plataformasAtuais = jogoSelecionado?.detalhes_plataformas || [];
+
+    const jaExiste = plataformasAtuais.some(
+      (p) => p.plataforma === plataforma && p.subcategoria === sub,
+    );
+
+    vinculoMutation.mutate({
+      jogoId: jogoSelecionadoId,
+      plataforma,
+      sub,
+      jaExiste,
+    });
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.02, 
+        staggerChildren: 0.02,
       },
     },
   };
@@ -239,9 +234,12 @@ const handleVinculo = (
   };
 
   const jogosFiltrados = useMemo(() => {
-    return jogos.filter((jogo) =>
-      jogo.nome.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
+    if (!searchQuery.trim()) {
+      return jogos;
+    }
+
+    const queryLower = searchQuery.toLowerCase();
+    return jogos.filter((jogo) => jogo.nome.toLowerCase().includes(queryLower));
   }, [jogos, searchQuery]);
 
   const getPlatformClass = (p: {
@@ -261,38 +259,47 @@ const handleVinculo = (
     return "";
   };
   useEffect(() => {
-    const abrirModalComJogo = (id: number) => {
-      const jogoEncontrado = jogos.find(
-        (jogo) => Number(jogo.id) === Number(id),
-      );
-      if (jogoEncontrado) {
-        setJogoSelecionadoId(jogoEncontrado.id);
-        setShowPopup(true);
-      }
-    };
     const handleEvent = (e: Event) => {
       const customEvent = e as CustomEvent<number>;
 
-      if (customEvent.detail) {
-        abrirModalComJogo(customEvent.detail);
+      if (!customEvent.detail) return;
+
+      const jogoEncontrado = jogos.find(
+        (j) => j.id === Number(customEvent.detail),
+      );
+
+      if (location.state?.abrirJogoId) {
+        const jogoEncontrado = jogos.find(
+          (jogo) => jogo.id === location.state.abrirJogoId,
+        );
+
+        if (jogoEncontrado) {
+          setJogoSelecionadoId(jogoEncontrado.id);
+          setShowPopup(true);
+        }
+      }
+      if (jogoEncontrado) {
+        setJogoSelecionadoId(jogoEncontrado.id);
+        setShowPopup(true);
+        setErroBusca(null);
+      } else {
+        setErroBusca("Você não vinculou esse jogo");
+
+        setTimeout(() => {
+          setErroBusca(null);
+        }, 3000);
       }
     };
 
     window.addEventListener("abrirJogo", handleEvent);
 
-    if (location.state?.abrirJogoId) {
-      abrirModalComJogo(location.state.abrirJogoId);
-
-      navigate(location.pathname, {
-        replace: true,
-        state: {},
-      });
-    }
     return () => {
       window.removeEventListener("abrirJogo", handleEvent);
     };
-  }, [jogos, location.state, location.pathname, navigate]);
+    // ✅ Dependência apenas do valor específico, não do objeto todo
+  }, [jogos, location.state?.abrirJogoId, location.pathname]);
 
+  // ✅ Efeito para controlar overflow quando modal abre/fecha
   useEffect(() => {
     if (showPopup) {
       document.body.style.overflow = "hidden";
@@ -305,22 +312,31 @@ const handleVinculo = (
     };
   }, [showPopup]);
 
-const jogoTemPlataforma = (
-  plataforma: string,
-  sub: string | null,
-) => {
-  return jogoSelecionado?.detalhes_plataformas?.some(
-    (p) =>
-      p.plataforma === plataforma &&
-      p.subcategoria === sub,
-  );
-};
-
+  // ✅ Efeito para definir title e garantir cleanup
   useEffect(() => {
-    document.title = "Jogos";
-}, []);
+    document.title = "Biblioteca";
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  // ✅ Abrir modal se veio via location.state
+
+  const jogoTemPlataforma = useCallback(
+    (plataforma: string, sub: string | null): boolean => {
+      return (
+        jogoSelecionado?.detalhes_plataformas?.some(
+          (p) => p.plataforma === plataforma && p.subcategoria === sub,
+        ) ?? false
+      );
+    },
+    [jogoSelecionado],
+  );
+
   return (
     <>
+      {erroBusca && <div className="popup-erro">{erroBusca}</div>}
       <div className="biblioteca-container">
         <SearchBar
           searchQuery={searchQuery}
@@ -336,6 +352,7 @@ const jogoTemPlataforma = (
           }}
           showResults={true}
         />
+
         <AnimatePresence mode="wait">
           {carregando ? (
             <motion.div

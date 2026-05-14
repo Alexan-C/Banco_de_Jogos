@@ -1,5 +1,5 @@
 import "./Biblioteca.css";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback} from "react";
 import api from "../../services/api";
 import { createPortal } from "react-dom";
 import { FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
@@ -28,7 +28,12 @@ interface Jogo {
     subcategoria: string | null;
   }>;
 }
-const Biblioteca = () => {
+
+const estaAutenticado = () => {
+return !!localStorage.getItem("token"); 
+  };
+
+  const Biblioteca = () => {
   const [erroBusca, setErroBusca] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [jogoSelecionadoId, setJogoSelecionadoId] = useState<number | null>(null);
@@ -36,9 +41,6 @@ const Biblioteca = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const estaAutenticado = () => {
-  return !!localStorage.getItem("token"); 
-    };
 
   const { data: jogos = [], isLoading: carregando } = useQuery<Jogo[]>({
     queryKey: ["biblioteca"],
@@ -47,15 +49,14 @@ const Biblioteca = () => {
       return response.data;
     },
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
   });
 
     const queryClient = useQueryClient();
 
     const jogoSelecionado = useMemo(() => {
-  return jogos.find(
-    (j) => j.id === jogoSelecionadoId,
-  ) || null;
+  return jogos.find((j) => j.id === jogoSelecionadoId,) || null;
 }, [jogos, jogoSelecionadoId]);
 
 const atualizarPlataformas = (
@@ -71,8 +72,7 @@ const atualizarPlataformas = (
     return plataformas.filter(
       (p) =>
         !(
-          p.plataforma === plataforma &&
-          p.subcategoria === sub
+          p.plataforma === plataforma && p.subcategoria === sub
         ),
     );
   }
@@ -115,97 +115,158 @@ const vinculoMutation = useMutation({
   },
 
   // ===== UPDATE OTIMISTA =====
-  onMutate: async ({
-    jogoId,
-    plataforma,
-    sub,
-    jaExiste,
-  }) => {
-
+  onMutate: async ({jogoId,plataforma,sub,jaExiste,}) => {
     await queryClient.cancelQueries({
       queryKey: ["biblioteca"],
     });
+    const jogoAnterior = queryClient.getQueryData<Jogo[]>(["biblioteca"])?.find((j)=> j.id === jogoId);
 
-    const cacheAnterior =
-      queryClient.getQueryData<Jogo[]>(["biblioteca"]);
-
-    queryClient.setQueryData<Jogo[]>(
-      ["biblioteca"],
-      (prev = []) =>
-        prev.map((jogo) => {
-          if (jogo.id !== jogoId) {
-            return jogo;
+    if(!jogoAnterior){
+      return{jogoAnterior: null, jogoId}
+    }
+ queryClient.setQueryData<Jogo[]>(
+        ["biblioteca"],
+        (prev) => {
+          // Type guard explícito
+          if (!prev || !Array.isArray(prev)) {
+            return [];
           }
+
+          return prev.map((jogo) => {
+            if (jogo.id !== jogoId) {
+              return jogo;
+            }
+             const novasPlataformas =
+            atualizarPlataformas(
+              jogo.detalhes_plataformas || [],
+              plataforma,
+              sub,
+              jaExiste
+            );
 
           return {
             ...jogo,
-            detalhes_plataformas:
-              atualizarPlataformas(
-                jogo.detalhes_plataformas || [],
-                plataforma,
-                sub,
-                jaExiste,
-              ),
+            detalhes_plataformas: novasPlataformas,
           };
-        }),
-    );
-    return { cacheAnterior };
-  },
+        })
 
-  // ===== ROLLBACK =====
-  onError: (err, _, context) => {
+        // remove da biblioteca se ficar sem plataformas
+        .filter((jogo) => {
+          if (jogo.id === jogoId) {
+            return (
+              jogo.detalhes_plataformas &&
+              jogo.detalhes_plataformas.length > 0
+            );
+          }
 
-    queryClient.setQueryData(
-      ["biblioteca"],
-      context?.cacheAnterior,
-    );
-
-    alert(tratarErroApi(err));
-  },
-
-  // ===== SINCRONIZA =====
-  onSettled: () => {
-    queryClient.invalidateQueries({
-      queryKey: ["biblioteca"],
-    });
-  },
-});
-
-const handleVinculo = (
-  plataforma: string,
-  sub: string | null,
-) => {
-
-  if (!jogoSelecionadoId) return;
-
-  if (!estaAutenticado()) {
-    navigate("/login", {
-      state: {
-        from: location.pathname,
-        abrirJogoId: jogoSelecionadoId,
-      },
-    });
-
-    return;
-  }
-
-  const plataformasAtuais =
-    jogoSelecionado?.detalhes_plataformas || [];
-
-  const jaExiste = plataformasAtuais.some(
-    (p) =>
-      p.plataforma === plataforma &&
-      p.subcategoria === sub,
+          return true;
+        });
+    }
   );
 
-  vinculoMutation.mutate({
-    jogoId: jogoSelecionadoId,
-    plataforma,
-    sub,
-    jaExiste,
-  });
-};
+  return { jogoAnterior, jogoId };
+},
 
+    // ===== ROLLBACK EM CASO DE ERRO =====
+    onError: (err, _, context) => {
+      // ✅ Rollback apenas do jogo que falhou, não do cache todo
+      if (context?.jogoAnterior && context?.jogoId) {
+        queryClient.setQueryData<Jogo[]>(
+          ["biblioteca"],
+          (prev) => {
+            if (!prev || !Array.isArray(prev)) {
+              return [];
+            }
+
+            return prev.map((jogo) =>
+              jogo.id === context.jogoId ? context.jogoAnterior : jogo
+            );
+          }
+        );
+      }
+
+      alert(tratarErroApi(err));
+    },
+
+    // ===== SINCRONIZA COM SERVIDOR =====
+    // ✅ MELHORADO: Apenas invalida se realmente necessário
+    onSettled: (data: Jogo | undefined, error: Error | null) => {
+      if (error) {
+        // Se houver erro mesmo após rollback, re-buscar para sincronizar
+        queryClient.invalidateQueries({queryKey: ["jogos"],});
+        queryClient.invalidateQueries({queryKey: ["biblioteca"],});
+        return
+      } else if (data && typeof data === 'object' && 'id' in data) {
+        
+        // Se sucesso, atualizar com dados do servidor (mais recentes que o otimista)
+        queryClient.setQueryData<Jogo[]>(["biblioteca"],
+          
+          (prev) => {
+            if (!prev || !Array.isArray(prev)) {
+              return [data];
+            }
+            const jogoExiste = prev.some((j)=> j.id === data.id)
+
+            if (!jogoExiste){
+              return [...prev,data];
+            }
+            // Encontrar e atualizar o jogo que foi modificado
+            return prev.map((jogo) =>
+              jogo.id === data.id
+                ? {
+                    ...jogo,
+                    detalhes_plataformas: data.detalhes_plataformas,
+                  }
+                : jogo
+            );
+          }
+        );
+      }
+    },
+  });
+  const PLATAFORMAS_VALIDAS = ["PS5", "XBOX", "PC"] 
+
+  const handleVinculo = (plataforma: string, sub: string | null) => {
+    if (!jogoSelecionadoId) return;
+    if (vinculoMutation.isPending){
+      return
+    }
+
+    if (!estaAutenticado()) {
+      navigate("/login", {
+        state: {
+          from: location.pathname,
+          abrirJogoId: jogoSelecionadoId,
+        },
+      });
+
+      return;
+    }
+      if (!PLATAFORMAS_VALIDAS.includes(plataforma)) {
+    console.warn("Plataforma inválida:", plataforma);
+    return;
+  }
+  
+  if (plataforma === "PC") {
+    if (!["Steam", "Epic"].includes(sub || "")) {
+      console.warn("Subcategoria inválida para PC:", sub);
+      return;
+    }
+  }
+  
+    const plataformasAtuais = jogoSelecionado?.detalhes_plataformas || [];
+
+    const jaExiste = plataformasAtuais.some(
+      (p) => p.plataforma === plataforma && p.subcategoria === sub
+    );
+
+    vinculoMutation.mutate({
+      jogoId: jogoSelecionadoId,
+      plataforma,
+      sub,
+      jaExiste,
+    });
+  };
 
   const cardMesaVariants: Variants = {
     hidden: {
@@ -232,10 +293,14 @@ const handleVinculo = (
       transition: { duration: 0.2 },
     },
   };
+ const jogosFiltrados = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return jogos;
+    }
 
-  const jogosFiltrados = useMemo(() => {
+    const queryLower = searchQuery.toLowerCase();
     return jogos.filter((jogo) =>
-      jogo.nome.toLowerCase().includes(searchQuery.toLowerCase()),
+      jogo.nome.toLowerCase().includes(queryLower)
     );
   }, [jogos, searchQuery]);
 
@@ -256,37 +321,51 @@ const handleVinculo = (
     return "";
   };
 
+  // ✅ CONSOLIDADO: Um único listener + location.state + cleanup
   useEffect(() => {
-    const abrirModalComJogo = (id: number) => {
-      const jogoEncontrado = jogos.find((jogo) => jogo.id === id);
+    const handleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<number>;
+      
+      if (!customEvent.detail) return;
+      
+      const jogoEncontrado = jogos.find(
+        (j) => j.id === Number(customEvent.detail)
+      );
+      if (location.state?.abrirJogoId) {
+        const jogoEncontrado = jogos.find(
+          (jogo) => jogo.id === location.state.abrirJogoId
+        );
+    
+        if (jogoEncontrado) {
+          setJogoSelecionadoId(jogoEncontrado.id);
+          setShowPopup(true);
+        }
+
+      }
       if (jogoEncontrado) {
         setJogoSelecionadoId(jogoEncontrado.id);
         setShowPopup(true);
-      }
-    };
-    const handleEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<number>;
-
-      if (customEvent.detail) {
-        abrirModalComJogo(customEvent.detail);
+        setErroBusca(null);
+      } else {
+        setErroBusca("Você não vinculou esse jogo");
+        
+        const timerId = setTimeout(() => {
+          setErroBusca(null);
+        }, 3000);
+        return() => clearTimeout(timerId)
       }
     };
 
     window.addEventListener("abrirJogo", handleEvent);
 
-    if (location.state?.abrirJogoId) {
-      abrirModalComJogo(location.state.abrirJogoId);
-
-      navigate(location.pathname, {
-        replace: true,
-        state: {},
-      });
-    }
+    
     return () => {
       window.removeEventListener("abrirJogo", handleEvent);
     };
-  }, [jogos, location.state, location.pathname, navigate]);
-
+    // ✅ Dependência apenas do valor específico, não do objeto todo
+  }, [jogos, location.state?.abrirJogoId, location.pathname]);
+  
+  // ✅ Efeito para controlar overflow quando modal abre/fecha
   useEffect(() => {
     if (showPopup) {
       document.body.style.overflow = "hidden";
@@ -299,45 +378,27 @@ const handleVinculo = (
     };
   }, [showPopup]);
 
-  const jogoTemPlataforma = (plataforma: string, sub: string | null) => {
-    return jogoSelecionado?.detalhes_plataformas?.some(
-      (p) => p.plataforma === plataforma && p.subcategoria === sub,
-    );
-  };
-
+  // ✅ Efeito para definir title e garantir cleanup
   useEffect(() => {
-    const handleEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<number>;
-
-      if (!customEvent.detail) return;
-
-      const jogoEncontrado = jogos.find(
-        (j) => j.id === Number(customEvent.detail),
-      );
-
-      if (jogoEncontrado) {
-        setJogoSelecionadoId(jogoEncontrado.id);
-        setShowPopup(true);
-        setErroBusca(null);
-      } else {
-        setErroBusca("Você não vinculou esse jogo");
-
-        setTimeout(() => {
-          setErroBusca(null);
-        }, 3000);
-      }
-    };
-
-    window.addEventListener("abrirJogo", handleEvent);
-
-    return () => {
-      window.removeEventListener("abrirJogo", handleEvent);
-    };
-  }, [jogos]);
-
-    useEffect(() => {
     document.title = "Biblioteca";
-}, []);
+    
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+  
+  // ✅ Abrir modal se veio via location.state
+  
+
+const jogoTemPlataforma = useCallback((
+  plataforma: string,
+  sub: string | null
+): boolean => {
+  return jogoSelecionado?.detalhes_plataformas?.some(
+    (p) => p.plataforma === plataforma && p.subcategoria === sub
+  ) ?? false;
+}, [jogoSelecionado]);
+
   return (
     <>
       {erroBusca && <div className="popup-erro">{erroBusca}</div>}
@@ -427,7 +488,7 @@ const handleVinculo = (
               <button
                 className="close-popup"
                 onClick={() => setShowPopup(false)}
-              >
+              > 
                 ✕
               </button>
 

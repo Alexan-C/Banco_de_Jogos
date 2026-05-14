@@ -1,9 +1,5 @@
 import axios from "axios";
 import api from "./api";
-import {QueryClient } from "@tanstack/react-query";
-
-const queryClient = new QueryClient()
-
 
 interface VinculoPayLoad{
     jogo_id: number;
@@ -11,47 +7,37 @@ interface VinculoPayLoad{
     subcategoria: string | null
 }
 export async function vincularJogo({
+  jogo_id,
+  plataforma,
+  subcategoria,
+}: VinculoPayLoad) {
+  const subClean =
+    subcategoria === "None" || !subcategoria ? null : subcategoria;
+
+  const { data } = await api.post("/pedidos/vincular", {
     jogo_id,
     plataforma,
-    subcategoria,
-}: VinculoPayLoad){
-    const subClean = subcategoria === "None" || !subcategoria 
-    ? null
-    : subcategoria;
+    subcategoria: subClean,
+  });
 
-    const {data} = await api.post("/pedidos/vincular", {
-        jogo_id,
-        plataforma,
-        subcategoria: subClean,
-    });
-    queryClient.setQueryData<VinculoPayLoad[]>(["biblioteca"], (antigos = []) => {
-    return [data, ...antigos];
-  })
-    return data
-} 
+  return data;
+}
+
 export async function desvincularJogo(
   jogoId: number,
   plataforma: string,
   subcategoria?: string | null,
 ) {
   const subClean =
-    subcategoria === "None" || !subcategoria
-      ? null
-      : subcategoria;
+    subcategoria === "None" || !subcategoria ? null : subcategoria;
 
-  const { data } = await api.delete(
-    `/pedidos/desvincular/${jogoId}`,
-    {
-      params: {
-        plataforma,
-        ...(subClean !== null && {
-          subcategoria: subClean
-        }),
-      },
+  const { data } = await api.delete(`/pedidos/desvincular/${jogoId}`, {
+    params: {
+      plataforma,
+      ...(subClean !== null && {
+        subcategoria: subClean,
+      }),
     },
-  );
-  queryClient.setQueryData<VinculoPayLoad[]>(["biblioteca"], (antigos = []) => {
-    return antigos.filter((jogo) => jogo.jogo_id !== jogoId);
   });
 
   return data;
@@ -68,4 +54,3 @@ export function tratarErroApi(err: unknown) {
 
   return mensagem;
 }
-    
