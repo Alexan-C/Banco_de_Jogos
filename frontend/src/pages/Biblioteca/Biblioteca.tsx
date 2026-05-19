@@ -46,7 +46,7 @@ return !!localStorage.getItem("token");
     queryKey: ["biblioteca"],
     queryFn: async () => {
       const response = await api.get("pedidos/minha_biblioteca");
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
